@@ -460,7 +460,7 @@ export default function WorkPage() {
       {/* Project grid */}
       <div style={{ padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px) clamp(56px, 8vw, 100px)' }}>
         <div style={{ maxWidth: 1240, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
+          <div className="work-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
             {projects.map((p) => (
               tab === 'brand'
                 ? <BrandTile key={p.name} project={p} onClick={setModal} />

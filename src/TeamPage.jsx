@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Footer from './Footer'
 import useResponsive from './useResponsive'
 import { NAV_H } from './theme'
@@ -9,7 +8,6 @@ import TeamMemberCard from './TeamMemberCard'
 import useWarmImages from './useWarmImages'
 import ContactForm from './ContactForm'
 import SectionLabel from './SectionLabel'
-import WavyBand from './WavyBand'
 // Team Page — built from Figma node 1:2311 (Landing Page - Dark-Team)
 
 const G      = '#34cc32'
@@ -28,39 +26,12 @@ export default function TeamPage() {
   const { isMobile, isSmall } = useResponsive()
   useWarmImages(POSES)
 
-  // How much of the left band's tail is visible depends on viewport height
-  // (its curl anchors to the viewport bottom). Letters are live animations —
-  // laying them only on the visible stretch keeps both bands within the
-  // browser's compositing budget, so the drift stays off the main thread.
-  const [tailUnits, setTailUnits] = useState(3450)
-  useEffect(() => {
-    const pz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pz')) || 1
-    const cssH = window.innerHeight / pz
-    setTailUnits(Math.round(1700 + Math.max(0, cssH - 1100)))
-  }, [])
   return (
     <div style={{ background: DARK, minHeight: '100vh', paddingTop: isSmall ? NAV_H.small : NAV_H.desktop, color: '#fff', overflow: 'hidden' }}>
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
       <section style={{ position: 'relative', padding: 'clamp(56px, 11vw, 170px) clamp(20px, 6vw, 100px) 0', display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'center', textAlign: 'center' }}>
-        {/* Wavy word band snaking in from the top-right (Figma 3373:1752) */}
-        <div aria-hidden style={{
-          position: 'absolute', top: '-46vw', left: '36vw', width: '72vw',
-          transform: 'rotate(-15deg)', pointerEvents: 'none', zIndex: 0,
-        }}>
-          <WavyBand words={['MISFITS', 'CRAZIES', 'CREATORS']} range={[0, 1550]} />
-        </div>
-        {/* Second band: curl at the viewport's bottom-left, rising out the top.
-            On laptops the body is zoomed, so the real viewport bottom is
-            100vh / --pz; small screens keep it up in the hero instead. */}
-        <div aria-hidden style={{
-          position: 'absolute',
-          top: isSmall ? '-19.5vw' : 'calc(100vh / var(--pz, 1) - 78vw)',
-          left: '-38.4vw', width: '72vw',
-          transform: 'rotate(-115deg)', pointerEvents: 'none', zIndex: 0,
-        }}>
-          <WavyBand words={['CRAZIES', 'CREATORS', 'MISFITS']} speed={30} range={[0, tailUnits]} />
-        </div>
+        {/* Wavy word bands parked in TeamHeroBands.jsx for reuse (1 Oct 2026) */}
         <h1 style={{
           fontFamily: "'Saira Condensed', sans-serif",
           fontSize: 'clamp(56px, 14vw, 150px)', fontWeight: 800, lineHeight: 1,
@@ -80,7 +51,7 @@ export default function TeamPage() {
 
       {/* ── Team grid ─────────────────────────────────────────────────────────── */}
       <section style={{ padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px)' }}>
-        <div style={{
+        <div className="team-grid" style={{
           display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center',
           maxWidth: 1286, margin: '0 auto',
         }}>

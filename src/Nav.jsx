@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { PATH_FOR, keyForPath } from './lib/routes'
@@ -32,10 +32,39 @@ export default function Nav() {
   // 'Work' hidden for now — re-add after 'Blogs' when the Work page is ready
   const links = ['Home', 'About us', 'CHNC', 'Case Studies', 'Blogs', 'Career']
   const targetFor = (l) => ({ Home: 'home', 'About us': 'about', CHNC: 'solutions', 'Case Studies': 'case-studies', Blogs: 'blog', Work: 'work', Career: 'careers' }[l])
-  const activePage = keyForPath(usePathname() || '/')
+  const pathname = usePathname() || '/'
+  const activePage = keyForPath(pathname)
   const [open, setOpen] = useState(false)
+  const navRef = useRef(null)
+
+  // Close the mobile menu whenever the route changes.
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  // While the menu is open: Escape or a tap outside the nav closes it, and the
+  // page behind is scroll-locked (released on close and on unmount).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    const onPointer = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) setOpen(false)
+    }
+    const html = document.documentElement
+    const body = document.body
+    const prev = [html.style.overflow, body.style.overflow]
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+      html.style.overflow = prev[0]
+      body.style.overflow = prev[1]
+    }
+  }, [open])
+
   return (
-    <nav style={{
+    <nav ref={navRef} style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '8px clamp(16px, 5vw, 100px)',
@@ -75,8 +104,10 @@ export default function Nav() {
       <button
           className="nav-mobile"
           aria-label="Menu"
+          aria-expanded={open}
+          aria-controls="mobile-menu"
           onClick={() => setOpen((o) => !o)}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 5, padding: 8 }}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 5, padding: 12, minWidth: 44, minHeight: 44, marginRight: -4, boxSizing: 'border-box' }}
         >
           {[0, 1, 2].map((i) => (
             <span key={i} style={{
@@ -89,7 +120,7 @@ export default function Nav() {
       </button>
 
       {open && (
-        <div className="nav-mobile" style={{
+        <div id="mobile-menu" className="nav-mobile" style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
           background: 'rgba(0,7,24,0.97)', backdropFilter: 'blur(10px)',
           borderTop: `1px solid ${BORDER}`,

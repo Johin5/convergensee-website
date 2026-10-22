@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react'
 import useResponsive from './useResponsive'
+import useIsomorphicLayoutEffect from './useIsomorphicLayoutEffect'
 import { submitAudit } from './lib/actions'
 
 const G = '#34cc32'
@@ -18,12 +19,15 @@ const G = '#34cc32'
 
 // Website URL is the highest-value field — it lets the audit start before the
 // first call (31 Aug brief).
+// Third entry: input attributes. Required matches submitAudit's checks so the
+// browser catches empties before a server round trip. Website stays type=text
+// (type=url would reject "acme.com" without a scheme) with the url keyboard.
 const FIELDS = [
-  ['Your name', 'name'],
-  ['Your email', 'email'],
-  ['Phone', 'phone'],
-  ['Company name', 'company'],
-  ['Company website', 'website'],
+  ['Your name', 'name', { type: 'text', autoComplete: 'name', required: true }],
+  ['Your email', 'email', { type: 'email', inputMode: 'email', autoComplete: 'email', autoCapitalize: 'off', spellCheck: false, required: true }],
+  ['Phone', 'phone', { type: 'tel', inputMode: 'tel', autoComplete: 'tel' }],
+  ['Company name', 'company', { type: 'text', autoComplete: 'organization', required: true }],
+  ['Company website', 'website', { type: 'text', inputMode: 'url', autoComplete: 'url', autoCapitalize: 'off', spellCheck: false }],
 ]
 
 // Scene art from the CHNC "Aap Powai aa rahe ho" creative (Figma: Charvak /
@@ -60,11 +64,20 @@ export function AuditTakeover({ name, company }) {
   // The quiz body this card replaces is far taller (on mobile the questions,
   // reaction clip and stacked fields run past 1500px), so the swap shrinks the
   // page and the browser's kept scroll offset strands the viewer below the
-  // section. Pull the card back on screen the moment it mounts.
+  // section. Pull the card back on screen before the first paint: a smooth
+  // scroll here left phones staring at ~0.5s of empty navy (the card started
+  // ~950px above the viewport), so jump instantly when the card is off screen
+  // and only glide when part of it is already visible.
   const stageRef = useRef(null)
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
+    const el = stageRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const vh = window.innerHeight
+    if (r.top >= 0 && r.bottom <= vh) return
+    const visible = r.bottom > 0 && r.top < vh
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    stageRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
+    el.scrollIntoView({ behavior: visible && !reduce ? 'smooth' : 'instant', block: 'center' })
   }, [])
   return (
     <div ref={stageRef} className="form-fade-up deliv-stage" role="status">
@@ -83,7 +96,8 @@ export function AuditTakeover({ name, company }) {
             <circle cx="12" cy="12" r="4.5" fill="#000718" />
           </svg>
           {/* the client's company, exactly as typed into the form */}
-          <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(12px, 1.3vw, 16px)', fontWeight: 700, letterSpacing: '0.05em', color: '#fff', margin: 0, maxWidth: 'clamp(120px, 16vw, 210px)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{company || 'Your office'}</p>
+          {/* width/wrapping in globals.css: one line on desktop, two on phones */}
+          <p className="deliv-pin-label-client" style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(12px, 1.3vw, 16px)', fontWeight: 700, letterSpacing: '0.05em', color: '#fff', margin: 0 }}>{company || 'Your office'}</p>
         </div>
         <svg className="deliv-cloud" style={{ top: '6%', width: 62 }} viewBox="0 0 60 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round">
           <path d="M 8 20 A 6 6 0 0 1 13 10 A 8 8 0 0 1 29 8 A 7 7 0 0 1 43 12 A 5 5 0 0 1 49 20 Z" />
@@ -157,16 +171,20 @@ export default function AuditForm({ context, onSuccess, cta = 'Submit' }) {
       action={formAction}
       style={{ display: 'flex', flexDirection: isSmall ? 'column' : 'row', flexWrap: isSmall ? undefined : 'wrap', gap: 20, alignItems: isSmall ? 'stretch' : 'flex-end', width: '100%' }}
     >
-      {FIELDS.map(([lbl, key]) => (
+      {FIELDS.map(([lbl, key, attrs]) => (
         <div key={key} style={{ flex: isSmall ? undefined : '1 1 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <label htmlFor={`audit-${key}`} style={{ fontFamily: "'Archivo', sans-serif", fontSize: 14, color: '#fff' }}>{lbl}</label>
+          {/* defaultValue re-fills the field after a failed submit (React 19
+              resets the form once the action returns). 16px below desktop so iOS
+              Safari doesn't zoom on focus. */}
           <input
             id={`audit-${key}`}
             name={key}
-            type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'}
+            {...attrs}
+            defaultValue={state?.values?.[key] ?? ''}
             className="input-glow"
             placeholder="Enter here"
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', height: 46, padding: '0 15px', fontFamily: "'Archivo', sans-serif", fontSize: 14, color: '#fff', width: '100%', boxSizing: 'border-box' }}
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', height: 46, padding: '0 15px', fontFamily: "'Archivo', sans-serif", fontSize: isSmall ? 16 : 14, color: '#fff', width: '100%', boxSizing: 'border-box' }}
           />
         </div>
       ))}

@@ -43,7 +43,7 @@ export const CASE_STUDIES = [
     heroImage: '/figma/case-study/img-mahindra4.jpg',
     type: 'Performance marketing',
     tagline:
-      'Helping an emerging small finance bank scale digital performance marketing: a 90-day pilot across Fixed Deposits and Personal Loans, run through AmplifyIT on CHNC.',
+      'Helping an emerging small finance bank scale digital performance marketing: a 90‑day pilot across Fixed Deposits and Personal Loans, run through AmplifyIT on CHNC.',
     stats: [
       { val: '5,500+', label: 'Conversions: loan enquiries submitted and FD app downloads' },
       { val: '₹192', label: 'Cost per conversion' },
@@ -60,7 +60,7 @@ export const CASE_STUDIES = [
       'Delivered visibility into exactly what was working, channel by channel.',
     ],
     highlights: [
-      { val: '16.5L+', label: 'Total clicks across the 90-day pilot', tag: 'AmplifyIT' },
+      { val: '16.5L+', label: 'Total clicks across the 90‑day pilot', tag: 'AmplifyIT' },
       { val: '2', label: 'Products scaled: Fixed Deposits and Personal Loans', tag: 'Performance marketing' },
     ],
   },

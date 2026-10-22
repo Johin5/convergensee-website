@@ -45,7 +45,7 @@ const BtnOutline = ({ children, style, active, onClick, ...p }) => {
   )
 }
 const Pill = ({ label, active, onClick }) => (
-  <div className="pill-hover" onClick={onClick} style={{
+  <div className={`pill-hover chnc-module${active ? ' is-active' : ''}`} onClick={onClick} style={{
     height: 46, padding: '0 20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', backdropFilter: 'blur(10px)',
     background: CARD, cursor: 'pointer',
     border: active ? `1px solid ${G}` : 'none',
@@ -120,7 +120,7 @@ function Hero() {
         }}>
           {/* stays the tight-tracked CHNC wordmark at every size — only the
               font-size and position animate */}
-          <p style={{
+          <p className="chnc-hero-eyebrow" style={{
             fontFamily: "'Archivo', sans-serif", fontWeight: 800, lineHeight: 1,
             color: G, margin: 0, whiteSpace: 'nowrap', letterSpacing: '-0.022em',
             fontSize: morphed ? 'clamp(24px, 2.6vw, 36px)' : 'clamp(56px, 10vw, 150px)',
@@ -134,7 +134,7 @@ function Hero() {
         {/* the headline CHNC introduces — same 150px cap as the other hero
             h1s; 10vw (not 14vw) so the long first line fits at laptop widths.
             Wipes in left→right like the About hero's word reveal. */}
-        <h1 style={{
+        <h1 className="chnc-hero-title" style={{
           fontFamily: "'Saira Condensed', sans-serif",
           fontSize: 'clamp(56px, 10vw, 150px)', fontWeight: 800, lineHeight: 1,
           textTransform: 'uppercase', margin: 0, letterSpacing: '-3px',
@@ -158,7 +158,7 @@ function Hero() {
 function ModulePills({ active, onSelect }) {
   const services = ['InsightIT','LocateIT','CreateIT','AmplifyIT','SocialiseIT','InfluenceIT','ScriptIT','AIgenIT','SearchIT','InvoiceIT','AdaptIT','EngageIT','ConvergeIT']
   return (
-    <section style={{
+    <section className="chnc-modules" style={{
       padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px) 0',
       display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap',
     }}>
@@ -310,6 +310,49 @@ const REEL_FRAME_STEPS = {
   AmplifyIT: [0, 1, 2, 2, 3, 4, 5, 5],
 }
 
+// Small screens (≤1024px) and reduced-motion users get the CHNC page without
+// the dashboard reels: static module views and the full workflow list. null
+// until mounted, so the reel never mounts for a frame before we know.
+const STATIC_QUERY = '(max-width: 1024px), (prefers-reduced-motion: reduce)'
+function useStaticChnc() {
+  const [isStatic, setIsStatic] = useState(null)
+  useEffect(() => {
+    const mq = window.matchMedia(STATIC_QUERY)
+    const update = () => setIsStatic(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+  return isStatic
+}
+
+// Static counterpart of WorkflowStack: every step visible, no reveal.
+function WorkflowList({ steps }) {
+  return (
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {s.stat ? (
+            <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: G, lineHeight: '28px', margin: '8px 0 0', textAlign: 'center' }}>
+              {s.text}
+            </p>
+          ) : (
+            <div style={{ width: '100%', boxSizing: 'border-box', minHeight: 68, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, border: `1px solid ${G}` }}>
+              <div style={{ width: 6, height: 6, flexShrink: 0, background: G }} />
+              <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 14, color: MUTED, lineHeight: '20px', margin: 0 }}>
+                <strong style={{ color: '#fff' }}>{s.bold}</strong>{s.rest}
+              </p>
+            </div>
+          )}
+          {i < steps.length - 1 && !s.stat && !steps[i + 1].stat && (
+            <div style={{ width: 1.5, height: 28, background: G }} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function WorkflowStack({ steps, count }) {
   const { isSmall } = useResponsive()
   const CARD_H = 68, GAP = 28, SLOT = CARD_H + GAP, PEEK = 18, MAX_VIS = 4
@@ -325,7 +368,6 @@ function WorkflowStack({ steps, count }) {
       <style>{`
         @keyframes growW { from { width: 0 } to { width: 50% } }
         @keyframes growH { from { height: 0 } to { height: 100% } }
-        @keyframes fillBg { from { background: transparent } to { background: ${CARD} } }
         @keyframes growConn { from { height: 0 } to { height: ${GAP}px } }
         @keyframes revealConn { from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 0 0% 0) } }
       `}</style>
@@ -372,7 +414,6 @@ function WorkflowStack({ steps, count }) {
               height: 46, padding: '0 20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
               display: 'flex', alignItems: 'center', justifyContent: isStat ? 'center' : 'flex-start', gap: 14,
               height: '100%', boxSizing: 'border-box',
-              animation: visible && !stacked && !isStat ? `fillBg 0.3s ease forwards 0.65s` : undefined,
               transition: 'background 0.4s ease',
             }}>
               {isStat ? (
@@ -438,6 +479,7 @@ function HowWeDoIt({ activeModule }) {
   const steps = MODULE_STEPS[activeModule] || DEFAULT_STEPS
   const [stepCount, setStepCount] = useState(0)
   const [inView, setInView] = useState(false)
+  const isStatic = useStaticChnc()
 
   // Only start animation when dashboard is visible on screen
   useEffect(() => {
@@ -471,11 +513,11 @@ function HowWeDoIt({ activeModule }) {
 
   // Static modules (no reel) fall back to a fixed reveal cadence once in view
   useEffect(() => {
-    if (frameMap) return
+    if (frameMap && !isStatic) return
     clearInterval(railStagger.current)
     railTarget.current = 0
     setStepCount(0)
-    if (!inView) return
+    if (!inView || isStatic !== false) return
     // Per-step reveal durations (ms); falls back to 3000 past the end
     const durations = [3000, 4000, 3500, 3000, 4000, 3000, 3500, 2000]
     let c = 0
@@ -488,7 +530,7 @@ function HowWeDoIt({ activeModule }) {
     }
     timer = setTimeout(advance, durations[0] || 3000)
     return () => clearTimeout(timer)
-  }, [steps, inView, frameMap])
+  }, [steps, inView, frameMap, isStatic])
 
   return (
     <section style={{ padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px) 0', display: 'flex', flexDirection: 'column', gap: 'clamp(40px, 6vw, 80px)', alignItems: 'center' }}>
@@ -505,12 +547,14 @@ function HowWeDoIt({ activeModule }) {
 
       <div style={{ display: 'flex', flexDirection: isSmall ? 'column' : 'row', gap: 50, alignItems: 'center', width: '100%', maxWidth: 1240 }}>
         {/* CHNC Dashboard */}
-        <div ref={dashRef} style={{ width: isSmall ? '100%' : 836, maxWidth: 836, height: isSmall ? 'clamp(300px, 60vw, 540px)' : 540, flexShrink: 0, borderRadius: 8, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(52,204,50,0.2), 0 20px 60px rgba(0,0,0,0.6)' }}>
-          <CHNCDashboard tilesTrigger={true} activeModule={activeModule} onModuleChange={() => {}} stepCount={stepCount} showWorkflow={true} onFrame={handleFrame} />
+        <div ref={dashRef} style={{ width: isSmall ? '100%' : 836, maxWidth: 836, height: isStatic ? undefined : isSmall ? 'clamp(300px, 60vw, 540px)' : 540, aspectRatio: isStatic ? '1440 / 930' : undefined, flexShrink: 0, borderRadius: 8, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(52,204,50,0.2), 0 20px 60px rgba(0,0,0,0.6)' }}>
+          {isStatic === null
+            ? <CHNCPlaceholder />
+            : <CHNCDashboard tilesTrigger={true} activeModule={activeModule} onModuleChange={() => {}} stepCount={stepCount} showWorkflow={!isStatic} staticMode={isStatic} onFrame={handleFrame} />}
         </div>
 
-        {/* Workflow node canvas — Android recents stacking */}
-        <WorkflowStack steps={steps} count={stepCount} />
+        {/* Workflow node canvas — Android recents stacking; a plain list when static */}
+        {isStatic ? <WorkflowList steps={steps} /> : <WorkflowStack steps={steps} count={stepCount} />}
       </div>
 
       <p key={activeModule} style={{
@@ -778,10 +822,22 @@ function ReadyToCreate({ activeModule }) {
     return () => clearTimeout(t)
   }, [auditName])
 
-  // Switching modules brings a fresh form: clear picks, back to the neutral clip
+  // Switching modules brings a fresh form: clear picks, back to the neutral clip,
+  // and drop any delivery takeover so the new module's heading never sits over
+  // the previous module's "We heard you" card. A form that already reported
+  // success (mid fade-out) is remounted via formKey so it can submit again.
+  const submittedRef = useRef(false)
+  const [formKey, setFormKey] = useState(0)
   useEffect(() => {
     setSelections((MODULE_QUIZ[activeModule] || MODULE_QUIZ.CreateIT).qs.map(() => null))
     setGif(quizDefaultGif)
+    setAuditName(null)
+    setAuditCompany('')
+    setLive(false)
+    if (submittedRef.current) {
+      submittedRef.current = false
+      setFormKey(k => k + 1)
+    }
   }, [activeModule])
 
   // Warm the browser cache for every reaction clip so the swap on click is instant.
@@ -850,8 +906,9 @@ function ReadyToCreate({ activeModule }) {
           </div>
         </div>
         <AuditForm
+          key={formKey}
           context={{ page: 'solutions', module: activeModule, answers: quiz.qs.map((q, qi) => (selections[qi] == null ? null : q.opts[selections[qi]])) }}
-          onSuccess={({ name, company }) => { setAuditName(name ?? ''); setAuditCompany(company ?? '') }}
+          onSuccess={({ name, company }) => { submittedRef.current = true; setAuditName(name ?? ''); setAuditCompany(company ?? '') }}
         />
       </div>
       )}

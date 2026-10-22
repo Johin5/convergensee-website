@@ -23,6 +23,22 @@ export default function TeamMemberCard({ member, variant = 'grid' }) {
   const close = () => setHovered(false)
   const open  = () => { requested.current = true; setHovered(true) }
 
+  // Hover is mouse-only (pointerType check), so a tap's emulated mouseenter
+  // can't double-toggle. Touch toggles on pointerup, and only for a real tap:
+  // a scroll swipe either cancels the pointer or moves past TAP_SLOP.
+  const TAP_SLOP = 10
+  const tapStart = useRef(null)
+  const onPointerEnter = e => { if (e.pointerType === 'mouse') open() }
+  const onPointerLeave = e => { if (e.pointerType === 'mouse') close() }
+  const onPointerDown  = e => { tapStart.current = e.pointerType === 'mouse' ? null : { x: e.clientX, y: e.clientY } }
+  const onPointerUp    = e => {
+    const s = tapStart.current
+    tapStart.current = null
+    if (!s || e.pointerType === 'mouse') return
+    if (Math.abs(e.clientX - s.x) > TAP_SLOP || Math.abs(e.clientY - s.y) > TAP_SLOP) return
+    hovered ? close() : open()
+  }
+
   // Drive playback from an effect, not from the hover handler: on the first
   // hover the `src` is only attached by the render that `setHovered` triggers,
   // so calling play() inline would fire against a source-less element and the
@@ -55,15 +71,17 @@ export default function TeamMemberCard({ member, variant = 'grid' }) {
 
   return (
     <div
-      onMouseEnter={open}
-      onMouseLeave={close}
-      onTouchStart={() => (hovered ? close() : open())}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => { tapStart.current = null }}
       style={{
         // Grid cells are a fluid quarter (third on mobile) of the row so the
         // wrap always lands on 4 / 3 columns; the 2px gaps are subtracted so
         // the last column never spills to a new line. Strip cells shrink on a
         // phone so the scroller shows a real slice of the next card.
-        width: isStrip ? (isMobile ? 240 : 320) : (isMobile ? 'calc((100% - 4px) / 3)' : 'calc((100% - 6px) / 4)'),
+        width: isStrip ? (isMobile ? 240 : 320) : (isMobile ? 'calc((100% - 2px) / 2)' : 'calc((100% - 6px) / 4)'),
         maxWidth: 320,
         flex: '0 0 auto',
         flexShrink: 0,
@@ -144,7 +162,7 @@ export default function TeamMemberCard({ member, variant = 'grid' }) {
       )}
 
       {/* text overlay */}
-      <div style={{
+      <div className={isStrip ? undefined : 'team-card-text'} style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: smallCell ? 10 : isStrip && isMobile ? 16 : 24,
         pointerEvents: 'none',
@@ -182,16 +200,25 @@ export default function TeamMemberCard({ member, variant = 'grid' }) {
           marginBottom: smallCell ? 6 : 10,
           transition: 'width 0.35s ease',
         }} />
-        <p style={{
+        <p className={isStrip ? undefined : 'team-card-name'} style={{
           fontFamily: "'Saira Condensed', sans-serif", fontWeight: 700,
-          fontSize: isStrip ? (isMobile ? 20 : 28) : smallCell ? 'clamp(9px, 2vw, 14px)' : 22,
+          fontSize: isStrip ? (isMobile ? 20 : 28) : smallCell ? (isMobile ? 15 : 12) : 22,
           textTransform: lowercaseName ? 'lowercase' : 'uppercase', letterSpacing: '0.02em', color: '#fff',
           margin: 0, lineHeight: 1.1,
+          // Narrow cells (2-up on phones, 4-up on tablets): wrap to two lines max,
+          // and let a single long surname break rather than spill past the card.
+          ...(smallCell && {
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden', overflowWrap: 'anywhere',
+          }),
         }}>{name}</p>
         {/* designation — hidden until hover, like the advisory-board cards */}
         <p style={{
-          fontFamily: "'Archivo', sans-serif", fontSize: smallCell ? 10 : 13, margin: 0,
-          maxHeight: hovered ? 40 : 0,
+          fontFamily: "'Archivo', sans-serif", fontSize: smallCell ? (isMobile ? 12 : 11) : 13, margin: 0,
+          lineHeight: smallCell ? 1.3 : undefined,
+          // Tall enough for the longest titles (5 lines at 11px in a 360px
+          // phone cell) so none is sliced mid-line.
+          maxHeight: hovered ? 90 : 0,
           marginTop: hovered ? (smallCell ? 3 : 6) : 0,
           opacity: hovered ? 1 : 0,
           overflow: 'hidden',

@@ -95,21 +95,40 @@ export function PoisonCTA({ style }) {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 export default function Footer() {
   const { isSmall } = useResponsive()
-  // On touch screens each link gets vertical padding so tap targets reach
-  // ~32px; the column gap shrinks to compensate, keeping the same rhythm.
-  const tapPad = isSmall ? { paddingTop: 9, paddingBottom: 9 } : null
+  // On touch screens each link row is at least 40px tall (tap target); the
+  // column gap shrinks to compensate, keeping the same rhythm.
+  const tapPad = isSmall ? { minHeight: 40, paddingTop: 4, paddingBottom: 4, boxSizing: 'border-box', alignItems: 'center' } : null
+  // Phones: contact copy at 14px in a lighter grey, since 12px #666a74 on
+  // DARK falls below 4.5:1 contrast. Desktop keeps the original look.
+  const infoText = isSmall ? { ...contactText, fontSize: 14, lineHeight: '20px', color: '#9aa0aa' } : contactText
+  // Phones: 44x44 hit area around each 26px social icon. The first box is
+  // pulled left so the icon still sits on the column's left edge.
+  const socialHit = isSmall
+    ? { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44 }
+    : { display: 'inline-flex' }
+  // Phones: contact info blocks need their own spacing, since the column gap
+  // there is tight so the links read as one list.
+  const infoGap = isSmall ? { marginTop: 18 } : null
+  const colGap = isSmall ? 2 : 20
+  const titleStyle = isSmall ? { ...colTitle, marginBottom: 6 } : colTitle
 
   return (
     <footer style={{ background: DARK, padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px)', borderTop: '1px solid rgba(255,255,255,0.22)', color: '#fff' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 48 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(24px, 3vw, 48px)', alignItems: 'flex-start', justifyContent: isSmall ? 'center' : 'space-between' }}>
+        {/* Phones: a fixed grid instead of the centred flex-wrap, which indented
+            each wrapped row by a different amount. Poison CTA on top, Company
+            beside Resources + Legal, Contact full width, all on one left edge. */}
+        <div style={isSmall ? {
+          display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 24, rowGap: 28, alignItems: 'start',
+          gridTemplateAreas: '"poison poison" "company resources" "company legal" "contact contact"',
+        } : { display: 'flex', flexWrap: 'wrap', gap: 'clamp(24px, 3vw, 48px)', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           {/* Poison */}
-          <PoisonCTA />
+          <PoisonCTA style={isSmall ? { gridArea: 'poison', marginBottom: 16 } : undefined} />
 
           {/* Nav columns — Company / Solutions / Resources */}
           {LINK_COLS.map(col => (
-            <div key={col.title} style={{ display: 'flex', flexDirection: 'column', gap: isSmall ? 2 : 20 }}>
-              <p style={colTitle}>{col.title}</p>
+            <div key={col.title} style={{ display: 'flex', flexDirection: 'column', gap: colGap, gridArea: isSmall ? col.title.toLowerCase() : undefined }}>
+              <p style={titleStyle}>{col.title}</p>
               {col.links.map(([label, target]) => (
                 <Link key={label} href={target.key ? PATH_FOR[target.key] : target.href} className="footer-link" style={{ ...linkStyle, ...tapPad }}>
                   <span style={{ color: G }}>›</span>{label}
@@ -119,18 +138,20 @@ export default function Footer() {
           ))}
 
           {/* Legal */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <p style={colTitle}>Legal</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: colGap, gridArea: isSmall ? 'legal' : undefined }}>
+            <p style={titleStyle}>Legal</p>
             {LEGAL_LINKS.map(l => (
-              <span key={l} className="footer-link" style={linkStyle}>
+              // No legal pages exist yet: kept inert (no link, no hover) but
+              // styled like the other footer rows.
+              <span key={l} style={{ ...linkStyle, cursor: 'default', ...tapPad }}>
                 <span style={{ color: G }}>›</span>{l}
               </span>
             ))}
           </div>
 
           {/* Contact */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <p style={colTitle}>Contact</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: colGap, gridArea: isSmall ? 'contact' : undefined }}>
+            <p style={titleStyle}>Contact</p>
             {/* Already on /#contact, the hash doesn't change and the browser
                 skips the anchor scroll — scroll imperatively when on home. */}
             <Link href="/#contact" onClick={(e) => {
@@ -145,21 +166,21 @@ export default function Footer() {
             <a href="mailto:letsconnect@convergensee.ai?subject=Book%20a%20demo" className="footer-link" style={{ ...linkStyle, ...tapPad }}>
               <span style={{ color: G }}>›</span>Book a Demo
             </a>
-            <div>
+            <div style={infoGap}>
               <p style={contactLabel}>Address</p>
-              <p style={{ ...contactText, maxWidth: 277 }}>A 303, Supreme Business Park, Hirandani Gardens, Powai, Mumbai, Maharashtra, 400076</p>
+              <p style={{ ...infoText, maxWidth: 277 }}>A 303, Supreme Business Park, Hiranandani Gardens, Powai, Mumbai, Maharashtra, 400076</p>
             </div>
-            <div>
+            <div style={infoGap}>
               <p style={contactLabel}>Call us</p>
-              <a href="tel:+919091399139" style={{ ...contactText, display: 'block', ...tapPad }}>+91 9091399139</a>
+              <a href="tel:+919091399139" style={{ ...infoText, display: isSmall ? 'flex' : 'block', ...tapPad }}>+91 9091399139</a>
             </div>
-            <div>
+            <div style={infoGap}>
               <p style={contactLabel}>Email us</p>
-              <a href="mailto:letsconnect@convergensee.ai" style={{ ...contactText, display: 'block', ...tapPad }}>letsconnect@convergensee.ai</a>
+              <a href="mailto:letsconnect@convergensee.ai" style={{ ...infoText, display: isSmall ? 'flex' : 'block', ...tapPad }}>letsconnect@convergensee.ai</a>
             </div>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: isSmall ? 0 : 16, alignItems: 'center', ...infoGap, ...(isSmall ? { marginLeft: -9 } : null) }}>
               {/* Instagram */}
-              <a href="https://instagram.com/convergensee" target="_blank" rel="noopener noreferrer" aria-label="ConvergenSEE on Instagram" style={{ display: 'inline-flex' }}>
+              <a href="https://instagram.com/convergensee" target="_blank" rel="noopener noreferrer" aria-label="ConvergenSEE on Instagram" style={socialHit}>
                 <svg className="social-icon" width="26" height="26" viewBox="0 0 18 18" fill="none">
                   <rect x="2" y="2" width="14" height="14" rx="4" stroke={DIM} strokeWidth="1.5" fill="none"/>
                   <circle cx="9" cy="9" r="3" stroke={DIM} strokeWidth="1.5" fill="none"/>
@@ -167,7 +188,7 @@ export default function Footer() {
                 </svg>
               </a>
               {/* LinkedIn */}
-              <a href="https://linkedin.com/company/convergensee" target="_blank" rel="noopener noreferrer" aria-label="ConvergenSEE on LinkedIn" style={{ display: 'inline-flex' }}>
+              <a href="https://linkedin.com/company/convergensee" target="_blank" rel="noopener noreferrer" aria-label="ConvergenSEE on LinkedIn" style={socialHit}>
                 <svg className="social-icon" width="26" height="26" viewBox="0 0 18 18" fill="none">
                   <rect x="2" y="2" width="14" height="14" rx="2" stroke={DIM} strokeWidth="1.5" fill="none"/>
                   <circle cx="6" cy="7" r="1" fill={DIM}/>

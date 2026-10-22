@@ -24,7 +24,7 @@ export const TEAM_GROUPS = [
         employmentType: 'Full-Time',
         experience: '2+ years',
         responsibilities: [
-          "Own flows end to end \u2014 research, wireframes, prototypes, final UI.",
+          "Own flows end to end: research, wireframes, prototypes, final UI.",
           "Work directly with engineering so what ships matches what was designed.",
           "Keep the design system honest as products and campaigns pile up.",
         ],
@@ -40,7 +40,7 @@ export const TEAM_GROUPS = [
         employmentType: 'Full-Time',
         experience: '1–3 years', // authored
         responsibilities: [
-          "Write across campaigns, scripts, decks and long-form \u2014 in the client's voice, not yours.",
+          "Write across campaigns, scripts, decks and long-form, in the client's voice, not yours.",
           "Sit in on strategy early so the words are not bolted on at the end.",
           "Turn a rough brief into three sharp options, fast.",
         ],
@@ -65,7 +65,7 @@ export const TEAM_GROUPS = [
         responsibilities: [
           "Take static concepts into motion for social, film and product work.",
           "Build reusable templates the team can run with at volume.",
-          "Handle the full chain \u2014 storyboard, animate, sound, export.",
+          "Handle the full chain: storyboard, animate, sound, export.",
         ],
         requirements: [
           "Strong After Effects; Cinema 4D or Blender is a plus.",
@@ -76,7 +76,7 @@ export const TEAM_GROUPS = [
     ],
     blurb: 'We think as far as we can for your brand. Bold ideas, sharp execution, and the creativity to make you stand out. Then we bring it all to life with care and precision.',
     members: [
-      'Susan Fernando', 'Vrajesh Daru', 'Rakshita Srivastava', 'Raj Sawant',
+      'Vrajesh Daru', 'Rakshita Srivastava', 'Raj Sawant',
       'Ganesh Yedala', 'Wilson Thomas', 'Shreya Chavan', 'Sonali Belwalkar',
       'Advait Dawal', 'Moazzam Ali', 'Mustafa Ansari', 'Sandesh Singh',
       'Sanika Nagulkar', 'Harshali Sonawane', 'Fawwaz Bhati', 'Divya Mittal',
@@ -129,7 +129,7 @@ export const TEAM_GROUPS = [
         experience: '3+ years',
         responsibilities: [
           "Plan, run and scale paid media across Meta, Google and emerging platforms.",
-          "Own the number \u2014 spend, CAC, ROAS \u2014 and the story behind it.",
+          "Own the number (spend, CAC, ROAS) and the story behind it.",
           "Test relentlessly and kill what does not work early.",
         ],
         requirements: [
@@ -255,7 +255,7 @@ export const TEAM_GROUPS = [
         experience: '1+ year',
         responsibilities: [
           "Scout, shortlist and negotiate with creators across categories.",
-          "Run campaigns end to end \u2014 briefs, deliverables, timelines, payouts.",
+          "Run campaigns end to end: briefs, deliverables, timelines, payouts.",
           "Track performance and rebuild the roster around what performs.",
         ],
         requirements: [
@@ -266,7 +266,7 @@ export const TEAM_GROUPS = [
       },
     ],
     blurb: 'We connect brands with voices that matter. Real partnerships, authentic conversations, and influencers who actually align with what you stand for. Relationships over transactions, always.',
-    members: ['Aayush Soni', 'Gunnika Bhatia'],
+    members: [],
   },
   {
     name: 'Production',
@@ -289,6 +289,6 @@ export const TEAM_GROUPS = [
       },
     ],
     blurb: 'Shoots, edits, renders, reshoots. The team that turns a line on a deck into something you actually want to watch.',
-    members: ['Akash Khandare', 'Yash Sontade', 'Ankita Jain', 'Manas Sahoo', 'Aayush Soni'],
+    members: ['Akash Khandare', 'Yash Sontade', 'Ankita Jain', 'Manas Sahoo'],
   },
 ]

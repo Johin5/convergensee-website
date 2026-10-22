@@ -21,8 +21,6 @@ export const PATH_FOR = {
   blog: '/blogs',
   'blog-read': `/blogs/${BLOG_SLUG}`,
   careers: '/careers',
-  work: '/work',
-  socials: '/socials',
 }
 
 export const slugify = (s) =>
@@ -49,8 +47,6 @@ const SECTION_FOR = {
   team: 'team',
   blogs: 'blog',
   careers: 'careers',
-  work: 'work',
-  socials: 'socials',
 }
 
 export function keyForPath(pathname) {

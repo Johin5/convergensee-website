@@ -15,8 +15,10 @@ const SHOT_PATH = 'M 84 78 C 138 60, 225 42, 298 30'
 // The same five-field form used to be copy-pasted into seven files; every page
 // renders <ContactForm /> now. Markup matches the original pixel for pixel.
 export default function ContactForm() {
-  const { isMobile } = useResponsive()
+  const { isMobile, isSmall } = useResponsive()
   const [state, formAction, pending] = useActionState(submitContact, null)
+  // 16px below desktop so iOS Safari doesn't zoom the page on focus.
+  const inputFont = isSmall ? 16 : 14
 
   if (state?.ok) {
     return (
@@ -96,11 +98,16 @@ export default function ContactForm() {
     )
   }
 
+  // Third entry: input attributes. Required matches submitContact's checks so
+  // the browser catches empties before a server round trip.
   const FIELDS = [
-    [['Your name', 'name'], ['Contact number', 'phone']],
-    [['Company name', 'company'], ['Designation', 'designation']],
-    [['Your email', 'email'], null],
+    [['Your name', 'name', { type: 'text', autoComplete: 'name', required: true }], ['Contact number', 'phone', { type: 'tel', inputMode: 'tel', autoComplete: 'tel' }]],
+    [['Company name', 'company', { type: 'text', autoComplete: 'organization' }], ['Designation', 'designation', { type: 'text', autoComplete: 'organization-title' }]],
+    [['Your email', 'email', { type: 'email', inputMode: 'email', autoComplete: 'email', autoCapitalize: 'off', spellCheck: false, required: true }], null],
   ]
+  // A failed submit echoes the typed values back; React 19 resets the form
+  // after the action, so the fields re-fill from defaultValue.
+  const values = state?.values || {}
 
   return (
     <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 1240, alignItems: 'center' }}>
@@ -112,10 +119,11 @@ export default function ContactForm() {
               <input
                 id={`contact-${field[1]}`}
                 name={field[1]}
-                type={field[1] === 'email' ? 'email' : 'text'}
+                {...field[2]}
+                defaultValue={values[field[1]] ?? ''}
                 className="input-glow"
                 placeholder="Enter here"
-                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', height: 46, padding: '0 15px', fontFamily: "'Archivo', sans-serif", fontSize: 14, color: '#fff', width: '100%', boxSizing: 'border-box' }}
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', height: 46, padding: '0 15px', fontFamily: "'Archivo', sans-serif", fontSize: inputFont, color: '#fff', width: '100%', boxSizing: 'border-box' }}
               />
             </div>
           ) : (isMobile ? null : <div key={fi} style={{ flex: 1 }} />))}
@@ -128,8 +136,9 @@ export default function ContactForm() {
           name="requirements"
           className="input-glow"
           rows={6}
+          defaultValue={values.requirements ?? ''}
           placeholder="Enter here"
-          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', padding: '13px 15px', fontFamily: "'Archivo', sans-serif", fontSize: 14, color: '#fff', resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
+          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', padding: '13px 15px', fontFamily: "'Archivo', sans-serif", fontSize: inputFont, color: '#fff', resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
         />
       </div>
 

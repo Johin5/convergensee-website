@@ -5,7 +5,7 @@
 // opportunities start here") — same fields, same upload, different framing.
 // Submitting plays the match scene below: a phone on which the ConvergenSEE
 // card gets swiped right, Tinder-style, then "It's a match!".
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useResponsive from './useResponsive'
 import { BtnGreen, BtnOutline, InputField, G, DARK, MUTED, DIM, BORDER } from './careersAtoms'
 
@@ -36,6 +36,12 @@ const HEARTS = [
 // 2.05 heart pop · 2.2 "It's a match!" pops · 2.15–2.6 hearts float ·
 // 2.6/2.75 text lines under the phone.
 function MatchScene({ name, isMobile }) {
+  // The scene is shorter than the form it replaces, so on a phone it would
+  // play above the viewport: bring it to the middle of the screen on mount.
+  const ref = useRef(null)
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [])
   const initials = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'YOU'
   const avatar = {
     width: 74, height: 74, borderRadius: '50%', background: '#0f1520',
@@ -47,7 +53,7 @@ function MatchScene({ name, isMobile }) {
     justifyContent: 'center', boxSizing: 'border-box',
   }
   return (
-    <div className="form-fade-up" role="status" style={{
+    <div ref={ref} className="form-fade-up" role="status" style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
       marginTop: 'clamp(40px, 6vw, 60px)',
     }}>
@@ -156,8 +162,24 @@ function MatchScene({ name, isMobile }) {
 
 export default function JoinSection({ heading, sub, position, headingSize }) {
   const { isMobile } = useResponsive()
-  const [fileName] = useState('my-cv.pdf')
-  const [progress] = useState(72)
+  // The CV row stays hidden until a file is picked; the bar then fills to show
+  // the file is attached (nothing uploads until the form is sent).
+  const fileInput = useRef(null)
+  const [fileName, setFileName] = useState('')
+  const [progress, setProgress] = useState(0)
+  const browse = () => fileInput.current?.click()
+  const onFile = e => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFileName(file.name)
+    setProgress(0)
+    requestAnimationFrame(() => requestAnimationFrame(() => setProgress(100)))
+  }
+  const clearFile = () => {
+    setFileName('')
+    setProgress(0)
+    if (fileInput.current) fileInput.current.value = ''
+  }
   const [name, setName] = useState('')
   const [sent, setSent] = useState(false)
 
@@ -187,12 +209,12 @@ export default function JoinSection({ heading, sub, position, headingSize }) {
       {/* Form fields */}
       <div style={{ maxWidth: 1240, width: '100%', marginTop: 'clamp(40px, 6vw, 60px)' }}>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20, marginBottom: 20 }}>
-          <InputField label="Your name" value={name} onChange={e => setName(e.target.value)} />
-          <InputField label="Contact number" />
+          <InputField label="Your name" name="name" autoComplete="name" value={name} onChange={e => setName(e.target.value)} />
+          <InputField label="Contact number" name="tel" type="tel" inputMode="tel" autoComplete="tel" />
         </div>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20 }}>
-          <InputField label="Your email" />
-          <InputField label="Position" defaultValue={position} />
+          <InputField label="Your email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="off" spellCheck={false} />
+          <InputField label="Position" name="position" autoComplete="off" defaultValue={position} />
         </div>
       </div>
 
@@ -224,8 +246,8 @@ export default function JoinSection({ heading, sub, position, headingSize }) {
           <p style={{
             fontFamily: "'Archivo', sans-serif", fontSize: 14, color: MUTED, margin: 0,
           }}>
-            Drag and drop image or{' '}
-            <span style={{ color: G, cursor: 'pointer', textDecoration: 'underline' }}>Browse</span>
+            Upload your CV:{' '}
+            <span onClick={browse} style={{ color: G, cursor: 'pointer', textDecoration: 'underline' }}>Browse</span>
           </p>
           <p style={{
             fontFamily: "'Archivo', sans-serif", fontSize: 12, color: DIM, margin: 0,
@@ -234,10 +256,15 @@ export default function JoinSection({ heading, sub, position, headingSize }) {
 
         {/* Browse button */}
         <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-          <BtnOutline>BROWSE</BtnOutline>
+          <BtnOutline type="button" onClick={browse}>BROWSE</BtnOutline>
+          <input
+            ref={fileInput} type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={onFile} aria-label="Upload your CV" style={{ display: 'none' }}
+          />
         </div>
 
-        {/* Uploaded file item */}
+        {/* Chosen file */}
+        {fileName && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 14,
           marginTop: 24, padding: '14px 16px',
@@ -265,10 +292,15 @@ export default function JoinSection({ heading, sub, position, headingSize }) {
             </div>
           </div>
           {/* Trash icon */}
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ cursor: 'pointer', flexShrink: 0 }}>
-            <path d="M3 5h14M8 5V3h4v2m-7 0v10a2 2 0 002 2h6a2 2 0 002-2V5" stroke={DIM} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          </svg>
+          <button type="button" onClick={clearFile} aria-label="Remove file" style={{
+            background: 'none', border: 0, padding: 10, margin: -10, cursor: 'pointer', flexShrink: 0, display: 'flex',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 5h14M8 5V3h4v2m-7 0v10a2 2 0 002 2h6a2 2 0 002-2V5" stroke={DIM} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+          </button>
         </div>
+        )}
       </div>
 
       {/* Send message */}

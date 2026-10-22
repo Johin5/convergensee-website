@@ -1,7 +1,7 @@
 'use client'
 
 // Case Studies Page — built from Figma node 1:1855 (Landing Page - Dark-cASE STUDY)
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import useResponsive from './useResponsive'
@@ -94,82 +94,107 @@ function CaseCard({ c, href }) {
     if (on) v.pause()
     else v.play().catch(() => {})
   }
+  // Touch screens have no hover, so there the card is static: stats always
+  // shown under the image, no hover state at all.
+  const [touch, setTouch] = useState(false)
+  useEffect(() => {
+    setTouch(window.matchMedia('(hover: none)').matches)
+  }, [])
   const Wrapper = href ? Link : 'div'
   return (
     <Wrapper
       {...(href ? { href } : {})}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{ position: 'relative', display: 'block', overflow: 'hidden', aspectRatio: '16/9', cursor: href ? 'pointer' : 'default', background: '#1a2235', color: 'inherit', textDecoration: 'none' }}
+      onMouseEnter={touch ? undefined : () => setHover(true)}
+      onMouseLeave={touch ? undefined : () => setHover(false)}
+      style={{ position: 'relative', display: 'block', overflow: 'hidden', cursor: href ? 'pointer' : 'default', background: touch ? 'transparent' : '#1a2235', color: 'inherit', textDecoration: 'none' }}
     >
-      {c.video ? (
-        <LazyVideo
-          videoRef={videoRef}
-          src={c.video}
-          poster={c.poster}
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+      <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
+        {c.video ? (
+          <LazyVideo
+            videoRef={videoRef}
+            src={c.video}
+            poster={c.poster}
+            style={{
+              position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+              transform: hovered ? 'scale(1.04)' : 'scale(1)',
+              transition: 'transform 0.6s ease',
+            }}
+          />
+        ) : (
+          <Image src={c.photo} alt={c.name} fill sizes="(max-width: 480px) 100vw, 50vw" style={{
+            objectFit: 'cover',
             transform: hovered ? 'scale(1.04)' : 'scale(1)',
             transition: 'transform 0.6s ease',
-          }}
-        />
-      ) : (
-        <Image src={c.photo} alt={c.name} fill sizes="(max-width: 480px) 100vw, 50vw" style={{
-          objectFit: 'cover',
-          transform: hovered ? 'scale(1.04)' : 'scale(1)',
-          transition: 'transform 0.6s ease',
-        }} />
-      )}
-      {/* Dark overlay */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: hovered ? 'rgba(0,7,24,0.85)' : 'rgba(0,7,24,0.45)',
-        transition: 'background 0.4s ease',
-      }} />
-
-      {/* Top — type tag, boxed like the industry pills */}
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 3 }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 14px',
-          background: 'transparent',
-          border: `2px solid ${BORDER}`,
-          fontFamily: "'Saira Condensed', sans-serif",
-          fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
-          color: '#fff',
-        }}>{c.type}</span>
-      </div>
-
-      {/* Bottom gradient */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: 180,
-        background: 'linear-gradient(to top, rgba(0,7,24,0.95) 0%, transparent 100%)',
-        pointerEvents: 'none',
-        opacity: hovered ? 1 : 0,
-        transition: 'opacity 0.4s ease',
-      }} />
-
-      {/* Bottom — brand name always visible, stats slide up on hover */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24, zIndex: 2,
-      }}>
-        <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: '#fff', textTransform: 'uppercase', lineHeight: 1, marginBottom: hovered ? 14 : 0 }}>{c.name}</p>
+          }} />
+        )}
+        {/* Dark overlay — on touch the stats sit below the image, so it only dims lightly */}
         <div style={{
-          display: 'flex', gap: 20,
-          maxHeight: hovered ? 200 : 0, overflow: 'hidden',
-          opacity: hovered ? 1 : 0,
-          transition: 'max-height 0.45s ease, opacity 0.35s ease',
+          position: 'absolute', inset: 0,
+          background: hovered && !touch ? 'rgba(0,7,24,0.85)' : 'rgba(0,7,24,0.45)',
+          transition: 'background 0.4s ease',
+        }} />
+
+        {/* Top — type tag, boxed like the industry pills */}
+        <div style={{ position: 'absolute', top: touch ? 14 : 20, right: touch ? 14 : 20, zIndex: 3 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 14px',
+            background: 'transparent',
+            border: `2px solid ${BORDER}`,
+            fontFamily: "'Saira Condensed', sans-serif",
+            fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
+            color: '#fff',
+          }}>{c.type}</span>
+        </div>
+
+        {/* Bottom gradient */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 180,
+          background: 'linear-gradient(to top, rgba(0,7,24,0.95) 0%, transparent 100%)',
+          pointerEvents: 'none',
+          opacity: hovered || touch ? 1 : 0,
+          transition: 'opacity 0.4s ease',
+        }} />
+
+        {/* Bottom — brand name always visible, stats slide up on hover */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, padding: touch ? 20 : 24, zIndex: 2,
         }}>
-          {c.stats.map((s, i) => (
-            <div key={i}>
-              <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 52, fontWeight: 800, color: G, lineHeight: 1, margin: 0 }}>{s.val}</p>
-              <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: MUTED, lineHeight: '16px', marginTop: 6 }}>{s.label}</p>
+          <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: touch ? 24 : 28, fontWeight: 700, color: '#fff', textTransform: 'uppercase', lineHeight: 1, marginBottom: hovered && !touch ? 14 : 0 }}>{c.name}</p>
+          {!touch && (
+            <div style={{
+              display: 'flex', gap: 20,
+              maxHeight: hovered ? 200 : 0, overflow: 'hidden',
+              opacity: hovered ? 1 : 0,
+              transition: 'max-height 0.45s ease, opacity 0.35s ease',
+            }}>
+              {c.stats.map((s, i) => (
+                <div key={i}>
+                  <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 52, fontWeight: 800, color: G, lineHeight: 1, margin: 0 }}>{s.val}</p>
+                  <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: MUTED, lineHeight: '16px', marginTop: 6 }}>{s.label}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Green border on hover */}
-      <div style={{ position: 'absolute', inset: 0, border: `2px solid ${G}`, opacity: hovered ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: 'none' }} />
+      {/* Touch — stats always shown under the image */}
+      {touch && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14,
+          padding: '16px 0 8px',
+        }}>
+          {c.stats.map((s, i) => (
+            <div key={i} style={{ minWidth: 0 }}>
+              <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 30, fontWeight: 800, color: G, lineHeight: 1, margin: 0, whiteSpace: 'nowrap' }}>{s.val}</p>
+              <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: MUTED, lineHeight: '15px', marginTop: 6 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Green border on hover / focus */}
+      <div style={{ position: 'absolute', inset: 0, border: `2px solid ${G}`, opacity: hovered ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: 'none', zIndex: 4 }} />
     </Wrapper>
   )
 }
@@ -230,8 +255,8 @@ export default function CaseStudiesPage() {
             {INDUSTRIES.map((ind) => (
               <div key={ind} className="pill-hover" style={{
                 height: 46, padding: '0 20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
-                background: CARD,
-                border: ind === 'ALL' ? `1px solid ${G}` : 'none',
+                background: 'transparent',
+                border: `1px solid ${ind === 'ALL' ? G : BORDER}`,
                 backdropFilter: 'blur(10px)',
                 fontFamily: "'Saira Condensed', sans-serif",
                 fontSize: 16, fontWeight: ind === 'ALL' ? 700 : 500,

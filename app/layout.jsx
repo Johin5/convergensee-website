@@ -19,6 +19,10 @@ export const metadata = {
   robots: { index: true, follow: true },
 }
 
+// Tints the mobile browser chrome (iOS Safari / Android Chrome tab bar) to the
+// site's navy; the manifest's theme_color only applies to installed PWAs.
+export const viewport = { themeColor: '#000718' }
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">

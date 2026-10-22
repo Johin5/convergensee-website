@@ -57,6 +57,9 @@ no CSS framework — styling is inline `style={{}}` objects plus
 - Colours are re-declared per file as `G` (#34cc32 green), `DARK` (#000718),
   `CARD` (#0f1520), `DIM` (#666a74), `BORDER` (rgba(255,255,255,0.1)).
 - Boxes/panels are `background: transparent` with a 1–2px `BORDER` outline.
+- **Never use a grey fill** (`CARD` #0f1520, #1a2235 or any other grey) as a
+  background for new panels, strips, cards or sections. Use transparent or
+  `DARK`. The user has rejected grey fills repeatedly.
 - Navigation is `<Link href={PATH_FOR[key]}>` (crawlable) for anything
   anchor-like; `useRouter().push()` only for genuine button handlers.
 - New images: `next/image` with `fill` inside positioned containers or real

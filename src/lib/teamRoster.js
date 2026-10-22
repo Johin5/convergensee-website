@@ -20,7 +20,6 @@ export const TEAM = [
   { name: 'Neha Malhotra', role: 'Co-Founder & Director - Digital Strategy, Account Management & Creative', photo: '/team/neha-malhotra.webp', pose: '/team/neha-malhotra-pose.webp' },
   { name: 'Shankar Iyer', role: 'Director - Technology', photo: '/team/shankar-iyer.webp', pose: '/team/shankar-iyer-pose.webp' },
   { name: 'Anand Radhakrishnan', role: 'Director - Sales', photo: '/team/anand-radhakrishnan.webp', pose: '/team/anand-radhakrishnan-pose.webp' },
-  { name: 'Aayush Soni', role: 'Manager - Creative Production', photo: '/team/aayush-soni.webp', pose: '/team/aayush-soni-pose.webp' },
   { name: 'Adheet Shetty', role: 'Senior Marketing & Branding Executive', photo: '/team/adheet-shetty.webp', pose: '/team/adheet-shetty-pose.webp' },
   { name: 'Advait Dawal', role: 'Creative Visualiser & Designer', photo: '/team/advait-dawal.webp', pose: '/team/advait-dawal-pose.webp' },
   { name: 'Akansha Gwari', role: 'Senior Manager - Digital Strategy', photo: '/team/akansha-gwari.webp', pose: '/team/akansha-gwari-pose.webp' },
@@ -34,7 +33,9 @@ export const TEAM = [
     photo: '/team/archana-vaghela.webp', pose: '/team/archana-vaghela-pose.webp',
     // A `video` beats `pose` on hover — it loops silently like a GIF. `bio` is a
     // list of [label, value] rows revealed over the lower half of the card.
-    video: '/team/archana-vaghela.mp4',
+    // Video parked for now (1 Oct 2026): static pose on hover instead.
+    // Uncomment to bring the looping hover video back.
+    // video: '/team/archana-vaghela.mp4',
     bio: [
       ['Blood group', 'Chai, coffee, khana, peena, shayari, empathy, beer, doom scrolling'],
       ['Weapons', 'Eyes, kyunki ankhiyon se goli maare. Also, chasma laga hua hai…so 4 goli maare.'],
@@ -45,11 +46,9 @@ export const TEAM = [
   { name: 'Divya Mittal', role: 'Senior Copy & Content Writer', photo: '/team/divya-mittal.webp', pose: '/team/divya-mittal-pose.webp' },
   { name: 'Fawwaz Bhati', role: 'Graphic Designer', photo: '/team/fawwaz-bhati.webp', pose: '/team/fawwaz-bhati-pose.webp' },
   { name: 'Ganesh Yedala', role: 'UI/UX Designer', photo: '/team/ganesh-yedala.webp', pose: '/team/ganesh-yedala-pose.webp' },
-  { name: 'Gunnika Bhatia', role: 'Influencer Marketing Associate', photo: '/team/gunnika-bhatia.webp', pose: '/team/gunnika-bhatia-pose.webp' },
   { name: 'Harshali Sonawane', role: 'Graphic Designer', photo: '/team/harshali-sonawane.webp', pose: '/team/harshali-sonawane-pose.webp' },
   { name: 'Janhavi Thorat', role: 'Business Operations Associate', photo: '/team/janhavi-thorat.webp', pose: '/team/janhavi-thorat-pose.webp' },
   { name: 'Jayesh Jain', role: 'Group Account Manager', photo: '/team/jayesh-jain.webp', pose: '/team/jayesh-jain-pose.webp' },
-  { name: 'Johanna Bohra', role: 'Intern - FlickVid', photo: '/team/johanna-bohra.webp', pose: '/team/johanna-bohra-pose.webp' },
   { name: 'Johin Jose', role: 'Performance Marketing Manager', photo: '/team/johin-jose.webp', pose: '/team/johin-jose-pose.webp' },
   { name: 'Keerti Varma', role: 'Intern - Graphic Design', photo: '/team/keerti-varma.webp', pose: '/team/keerti-varma-pose.webp' },
   { name: 'Kiran Mulchandani', role: 'Senior Manager - Marketing, Branding & Influencer Marketing', photo: '/team/kiran-mulchandani.webp', pose: '/team/kiran-mulchandani-pose.webp' },
@@ -63,7 +62,6 @@ export const TEAM = [
   { name: 'Muskan Aahi', role: 'Digital Strategy Associate', photo: '/team/muskan-aahi.webp', pose: '/team/muskan-aahi-pose.webp' },
   { name: 'Mustafa Ansari', role: 'Graphic Designer & Visualizer', photo: '/team/mustafa-ansari.webp', pose: '/team/mustafa-ansari-pose.webp' },
   { name: 'Nikita Salve', role: 'Business Operations Associate', photo: '/team/nikita-salve.webp', pose: '/team/nikita-salve-pose.webp' },
-  { name: 'Obed Sam', role: 'Intern - Creator & Brand Partnerships', photo: '/team/obed-sam.webp', pose: '/team/obed-sam-pose.webp' },
   { name: 'Palak Kothari', role: 'Business Operations Associate', photo: '/team/palak-kothari.webp', pose: '/team/palak-kothari-pose.webp' },
   { name: 'Pranay Valecha', role: 'Executive - People Experience', photo: '/team/pranay-valecha.webp', pose: '/team/pranay-valecha-pose.webp' },
   { name: 'Prashant Birjudar', role: 'People Experience Associate', photo: '/team/prashant-birjudar.webp', pose: '/team/prashant-birjudar-pose.webp' },
@@ -84,7 +82,6 @@ export const TEAM = [
   { name: 'Sheetal Chakral', role: 'Client Servicing Executive', photo: '/team/sheetal-chakral.webp', pose: '/team/sheetal-chakral-pose.webp' },
   { name: 'Shreya Chavan', role: 'CG Generalist & AI Artist', photo: '/team/shreya-chavan.webp', pose: '/team/shreya-chavan-pose.webp' },
   { name: 'Sonali Belwalkar', role: 'Graphic Designer', photo: '/team/sonali-belwalkar.webp', pose: '/team/sonali-belwalkar-pose.webp' },
-  { name: 'Susan Fernando', role: 'Creative Director', photo: '/team/susan-fernando.webp', pose: '/team/susan-fernando-pose.webp' },
   { name: 'Tanvi Jadhav', role: 'Business Operations Associate', photo: '/team/tanvi-jadhav.webp', pose: '/team/tanvi-jadhav-pose.webp' },
   { name: 'Tiana Balaji', role: 'Inside Sales & Executive Office Associate', photo: '/team/tiana-balaji.webp', pose: '/team/tiana-balaji-pose.webp' },
   { name: 'Vikrant Shedge', role: 'Business Operations Associate', photo: '/team/vikrant-shedge.webp', pose: '/team/vikrant-shedge-pose.webp' },

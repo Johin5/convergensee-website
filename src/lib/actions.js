@@ -14,11 +14,13 @@ export async function submitContact(prevState, formData) {
     requirements: (formData.get('requirements') || '').toString().trim(),
   }
 
+  // Errors echo the submitted values back: React 19 resets the form after the
+  // action runs, and the fields re-fill from these via defaultValue.
   if (!data.name || !data.email) {
-    return { ok: false, error: 'Please fill in at least your name and email.' }
+    return { ok: false, error: 'Please fill in at least your name and email.', values: data }
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    return { ok: false, error: 'That email address doesn’t look right.' }
+    return { ok: false, error: 'That email address doesn’t look right.', values: data }
   }
 
   console.log('[contact] submission:', JSON.stringify(data))
@@ -37,11 +39,13 @@ export async function submitAudit(prevState, formData) {
     context: (formData.get('context') || '').toString(),
   }
 
+  // Echo the typed fields (not the quiz context) so a failed submit keeps them.
+  const values = { name: data.name, email: data.email, phone: data.phone, company: data.company, website: data.website }
   if (!data.name || !data.email || !data.company) {
-    return { ok: false, error: 'Please fill in your name, email and company.' }
+    return { ok: false, error: 'Please fill in your name, email and company.', values }
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    return { ok: false, error: 'That email address doesn’t look right.' }
+    return { ok: false, error: 'That email address doesn’t look right.', values }
   }
 
   console.log('[audit] submission:', JSON.stringify(data))

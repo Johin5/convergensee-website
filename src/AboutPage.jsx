@@ -61,7 +61,7 @@ function ValueCard({ line1, line1Green, line2, line2Green, bg, desc }) {
         )}
         {desc && (
           <p style={{
-            fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(13px, 1.6vw, 16px)', color: MUTED,
+            fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(14px, 1.6vw, 16px)', color: MUTED,
             lineHeight: 1.5, maxWidth: 460, margin: '14px auto 0', padding: '0 20px',
           }}>{desc}</p>
         )}
@@ -89,6 +89,19 @@ export default function AboutPage() {
     return () => clearInterval(interval)
   }, [])
 
+
+  // Bala polaroid collage. Desktop: right of the letter. Small screens: between
+  // the heading and the letter body (it used to trail after the sign-off).
+  const balaCollage = (
+    <div style={{ width: isSmall ? '100%' : 732, maxWidth: isSmall ? 'none' : 732, height: isSmall ? 'clamp(320px, 70vw, 702px)' : 800, overflow: 'hidden', flexShrink: 0, position: 'relative', alignSelf: isSmall ? undefined : 'center', marginRight: isSmall ? 0 : 48 }}>
+      <Image src="/bala-polaroid.webp" alt="Letter from Bala" fill sizes="(max-width: 1024px) 100vw, 732px" style={{
+        objectFit: 'contain', objectPosition: isSmall ? 'center' : 'right center', pointerEvents: 'none',
+        // The polaroids fill only the middle of the frame (dark margin is baked
+        // into the image), so phones zoom in to drop the dead space.
+        transform: isSmall ? 'scale(1.45)' : undefined,
+      }} />
+    </div>
+  )
   return (
     <div style={{ background: DARK, minHeight: '100vh', color: '#fff' }}>
 
@@ -140,15 +153,24 @@ export default function AboutPage() {
               whiteSpace: 'nowrap', textShadow: '0 2px 24px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.6)',
             }}>
               <span style={{ color: '#fff' }}>WE </span>
-              <span style={{
-                color: G,
-                display: 'inline-block',
-                verticalAlign: 'top',
-                clipPath: visible ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
-                transition: visible
-                  ? 'clip-path 0.5s cubic-bezier(0.77, 0, 0.175, 1)'
-                  : 'clip-path 0.3s cubic-bezier(0.77, 0, 0.175, 1)',
-              }}>{WORDS[wordIdx]}</span>
+              {/* Every word sits in the same grid cell (the others clipped away), so
+                  the slot is always as wide as the widest word and 'WE' / 'IT'
+                  never shift. The clip overhangs the glyph box by 30px so the
+                  h1's blurred text-shadow isn't cut into a dark rectangle. */}
+              <span style={{ display: 'inline-grid', justifyItems: 'center', verticalAlign: 'top' }}>
+                {WORDS.map((w, i) => (
+                  <span key={w} aria-hidden={i === wordIdx ? undefined : 'true'} style={{
+                    gridArea: '1 / 1',
+                    color: G,
+                    // Off-duty words stay fully clipped, so the incoming one
+                    // animates its reveal from the same hidden state.
+                    clipPath: visible && i === wordIdx ? 'inset(-30px -30px -30px -30px)' : 'inset(-30px 100% -30px 0)',
+                    transition: visible
+                      ? 'clip-path 0.5s cubic-bezier(0.77, 0, 0.175, 1)'
+                      : 'clip-path 0.3s cubic-bezier(0.77, 0, 0.175, 1)',
+                  }}>{w}</span>
+                ))}
+              </span>
               <span style={{ color: '#fff' }}> IT</span>
             </h1>
             <p style={{
@@ -193,6 +215,7 @@ export default function AboutPage() {
                 <div style={{ color: G, textTransform: 'none' }}>bala</div>
               </div>
             </div>
+            {isSmall && balaCollage}
             <div style={{
               fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(15px, 2vw, 18px)',
               color: MUTED, lineHeight: '24px',
@@ -227,19 +250,16 @@ export default function AboutPage() {
                 }}>bala</span>
                 {/* textTransform none: "ConvergenSEE" casing is load-bearing */}
                 <div style={{
-                  fontFamily: "'Archivo', sans-serif", fontSize: 11, letterSpacing: '0.14em',
+                  fontFamily: "'Archivo', sans-serif", fontSize: isSmall ? 12 : 11, letterSpacing: '0.14em',
                   textTransform: 'none', color: 'rgba(255,255,255,0.5)', marginTop: 6,
                 }}>FOUNDER, ConvergenSEE</div>
               </div>
             </div>
           </div>
 
-          {/* Right: Bala polaroid gif — right-aligned, vertically centered to the letter */}
-          <div style={{ width: isSmall ? '100%' : 732, maxWidth: isSmall ? 'none' : 732, height: isSmall ? 'clamp(320px, 70vw, 702px)' : 800, overflow: 'hidden', flexShrink: 0, position: 'relative', alignSelf: isSmall ? undefined : 'center', marginRight: isSmall ? 0 : 48 }}>
-            <Image src="/bala-polaroid.webp" alt="Letter from Bala" fill sizes="(max-width: 1024px) 100vw, 732px" style={{
-              objectFit: 'contain', objectPosition: isSmall ? 'center' : 'right center', pointerEvents: 'none',
-            }} />
-          </div>
+          {/* Right: Bala polaroid gif — right-aligned, vertically centered to the
+              letter. Small screens render it inside the text column instead. */}
+          {!isSmall && balaCollage}
         </div>
       </section>
 

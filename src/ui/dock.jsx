@@ -44,6 +44,7 @@ function DockItem({ label, mouseX, isActive, onSelect, isSmall }) {
   return (
     <motion.button
       ref={ref}
+      data-dock-item={label}
       variants={itemVariants}
       onClick={() => onSelect(label)}
       onMouseEnter={() => setHovered(true)}
@@ -87,11 +88,46 @@ const containerVariants = {
   visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
 }
 
+export const DOCK_MODULES = items
+
 export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
   const controls = useAnimation()
   const [triggered, setTriggered] = useState(false)
+  // The pulse rings end at opacity 0 but scale 1.14, so left mounted they
+  // stick out past the viewport on phones and widen the page. Unmount them
+  // once the (outer, later) ring has finished its last repeat.
+  const [pulseDone, setPulseDone] = useState(false)
   const mouseX = useMotionValue(Infinity)
   const { isSmall } = useResponsive()
+  const railRef = useRef(null)
+
+  // Small screens: keep the active module centred in the scrolling rail, so
+  // stepping with the arrows (or swiping the dashboard) never leaves the
+  // highlighted chip off-screen.
+  useEffect(() => {
+    const rail = railRef.current
+    if (!isSmall || !rail) return
+    const el = rail.querySelector(`[data-dock-item="${activeModule}"]`)
+    if (!el) return
+    const left = el.offsetLeft - (rail.clientWidth - el.offsetWidth) / 2
+    rail.scrollTo({ left: Math.max(0, left), behavior: 'smooth' })
+  }, [activeModule, isSmall])
+
+  const step = (dir) => {
+    const i = items.indexOf(activeModule)
+    onSelect(items[(i + dir + items.length) % items.length])
+  }
+  // Same circular outline arrows as the homepage testimonials
+  const arrowBtn = (dir) => (
+    <button
+      onClick={() => step(dir)}
+      aria-label={dir < 0 ? 'Previous module' : 'Next module'}
+      className="btn-outline testi-arrow"
+      style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d={dir < 0 ? 'M10 3L5 8l5 5' : 'M6 3l5 5-5 5'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </button>
+  )
 
   useEffect(() => {
     if (!triggerOpacity) return
@@ -101,6 +137,7 @@ export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
         controls.start('visible')
       } else if (v < 0.05 && triggered) {
         setTriggered(false)
+        setPulseDone(false)
         controls.start('hidden')
       }
     })
@@ -108,11 +145,12 @@ export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
   }, [triggerOpacity, triggered, controls])
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <div style={{ position: 'relative', ...(isSmall ? { maxWidth: '100%', minWidth: 0 } : {}) }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, width: '100%' }}>
+      {isSmall && arrowBtn(-1)}
+      <div style={{ position: 'relative', ...(isSmall ? { flex: 1, maxWidth: '100%', minWidth: 0, overflowX: 'clip' } : {}) }}>
 
         {/* Pulse glow on appear */}
-        {triggered && <>
+        {triggered && !pulseDone && <>
           <motion.div
             initial={{ opacity: 0.6, scale: 1 }}
             animate={{ opacity: 0, scale: 1.08 }}
@@ -123,11 +161,13 @@ export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
             initial={{ opacity: 0.3, scale: 1 }}
             animate={{ opacity: 0, scale: 1.14 }}
             transition={{ duration: 1.4, delay: 0.6, ease: 'easeOut', repeat: 2, repeatDelay: 0.6 }}
+            onAnimationComplete={() => setPulseDone(true)}
             style={{ position: 'absolute', inset: -1, pointerEvents: 'none', border: '1px solid rgba(52,204,50,0.3)', zIndex: 0 }}
           />
         </>}
 
         <motion.div
+          ref={railRef}
           variants={containerVariants}
           initial="hidden"
           animate={controls}
@@ -151,6 +191,9 @@ export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
               overscrollBehaviorX: 'contain',
+              // Faded edges signal there are more modules either side
+              maskImage: 'linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
             } : {}),
           }}
         >
@@ -159,6 +202,7 @@ export default function CHNCDock({ triggerOpacity, activeModule, onSelect }) {
           ))}
         </motion.div>
       </div>
+      {isSmall && arrowBtn(1)}
     </div>
   )
 }

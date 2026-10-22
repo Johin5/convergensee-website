@@ -171,13 +171,13 @@ export default function JobPage({ job }) {
 
       {/* ── The brief — responsibilities / requirements, split reading block ── */}
       <section style={{ padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px)' }}>
-        <div style={{
+        <div className="job-brief" style={{
           maxWidth: 1240, margin: '0 auto',
           display: 'flex', flexDirection: isSmall ? 'column' : 'row',
           gap: 'clamp(32px, 4vw, 60px)', alignItems: 'stretch',
         }}>
           <Brief title="Responsibilities" items={job.responsibilities} />
-          <div style={{
+          <div className="job-brief-rule" style={{
             alignSelf: 'stretch', flexShrink: 0,
             width: isSmall ? '100%' : 1, height: isSmall ? 1 : 'auto',
             background: BORDER,
@@ -200,9 +200,16 @@ export default function JobPage({ job }) {
             }}>{group.blurb}</p>
           </div>
           <div style={{ position: 'relative' }}>
-            <div style={{ display: 'flex', gap: 2, overflowX: 'auto', padding: '0 clamp(20px, 6vw, 100px)', scrollbarWidth: 'none' }}>
+            {/* Touch widths snap each swipe to a card start, offset by the side
+                gutter, so a name never comes to rest half under the edge fade. */}
+            <div style={{
+              display: 'flex', gap: 2, overflowX: 'auto', padding: '0 clamp(20px, 6vw, 100px)', scrollbarWidth: 'none',
+              ...(isSmall && { scrollSnapType: 'x mandatory', scrollPaddingInline: 'clamp(20px, 6vw, 100px)' }),
+            }}>
               {members.map(m => (
-                <TeamMemberCard key={m.name} member={m} variant="strip" />
+                <div key={m.name} style={{ flex: '0 0 auto', scrollSnapAlign: 'start' }}>
+                  <TeamMemberCard member={m} variant="strip" />
+                </div>
               ))}
             </div>
             {/* Edge fades track the viewport (like the home Team strip) so a
@@ -231,7 +238,7 @@ export default function JobPage({ job }) {
               How we <span style={{ color: G }}>hire</span>
             </h2>
           </div>
-          <div style={{
+          <div className="job-steps" style={{
             display: 'grid', width: '100%',
             gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : isSmall ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
             gap: 20,

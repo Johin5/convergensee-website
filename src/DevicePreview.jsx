@@ -38,8 +38,8 @@ const PRESETS = [
 
 const PAGES = [
   ['Home', '/'], ['Solutions', '/solutions'], ['About', '/about'],
-  ['Work', '/work'], ['Case Studies', '/case-studies'], ['Careers', '/careers'],
-  ['Team', '/team'], ['Blogs', '/blogs'], ['Socials', '/socials'],
+  ['Case Studies', '/case-studies'], ['Careers', '/careers'],
+  ['Team', '/team'], ['Blogs', '/blogs'],
 ]
 
 // Mirrors the "Laptop scale" media queries in globals.css.

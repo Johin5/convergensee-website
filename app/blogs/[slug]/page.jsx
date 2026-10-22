@@ -10,7 +10,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const post = findPostBySlug(slug)
-  if (!post) return {}
+  // Unknown slug: the page calls notFound(), so match app/not-found.jsx's title.
+  if (!post) return { title: 'Page not found' }
   return buildMetadata({
     title: post.title,
     description: post.description,

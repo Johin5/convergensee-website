@@ -10,7 +10,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { role } = await params
   const job = findJobBySlug(role)
-  if (!job) return {}
+  // Unknown slug: the page calls notFound(), so match app/not-found.jsx's title.
+  if (!job) return { title: 'Page not found' }
   return buildMetadata({
     title: `${job.title} - Careers`,
     description: `ConvergenSEE is hiring a ${job.title} for its ${job.team} team in Mumbai. See the role, responsibilities and requirements, and apply.`,

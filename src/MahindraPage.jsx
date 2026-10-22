@@ -178,7 +178,7 @@ export default function MahindraPage() {
               'Managed 200+ dealer handles across Facebook & Instagram and 1,000+ brand & dealer touchpoints, running the program continuously over 30 months (Jun 2020 – Dec 2022).',
             ].map((text, i) => (
               <p key={i} style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(15px, 2vw, 18px)', color: '#fff', lineHeight: 1.6, margin: 0 }}>
-                <span style={{ color: G }}>🟢</span> {text}
+                <span aria-hidden="true" style={{ display: 'inline-block', width: '0.55em', height: '0.55em', borderRadius: '50%', background: G, marginRight: '0.5em', verticalAlign: '0.08em' }} />{text}
               </p>
             ))}
           </div>

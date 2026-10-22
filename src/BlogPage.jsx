@@ -168,8 +168,8 @@ export default function BlogPage() {
               className="pill-hover"
               onClick={() => setFilter(f)}
               style={{
-                background: CARD,
-                border: f === filter ? `1px solid ${G}` : 'none',
+                background: 'transparent',
+                border: `1px solid ${f === filter ? G : BORDER}`,
                 height: 46, padding: '0 20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
                 fontFamily: "'Saira Condensed', sans-serif",
                 fontSize: 16, fontWeight: f === filter ? 700 : 500,

@@ -2,7 +2,7 @@ export default function manifest() {
   return {
     name: 'ConvergenSEE',
     short_name: 'ConvergenSEE',
-    description: 'ConvergenSEE — Digital Marketing Agency, Mumbai',
+    description: 'ConvergenSEE - Digital Marketing Agency, Mumbai',
     start_url: '/',
     display: 'standalone',
     background_color: '#000718',

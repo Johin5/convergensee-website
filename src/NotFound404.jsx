@@ -128,6 +128,15 @@ export default function NotFound404() {
 
   return (
     <>
+      {/* Keyboard hints vs touch copy: both are rendered and CSS picks one, so
+          server and client markup always match (no UA sniffing at render). */}
+      <style>{`
+        .rx-touch { display: none; }
+        @media (hover: none) and (pointer: coarse) {
+          .rx-kbd { display: none !important; }
+          .rx-touch { display: inline; }
+        }
+      `}</style>
       <section style={{
         // 100vh isn't compensated by the laptop-scale body zoom — divide by --pz
         // so the section still covers the full screen on 1025–1727px viewports.
@@ -171,8 +180,9 @@ export default function NotFound404() {
             Back to home
           </Link>
         </div>
-        <span style={{ fontFamily: ARCHIVO, fontSize: 12, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)' }}>
-          {best > 0 ? `YOUR BEST: ${best} MS - OR PRESS SPACE` : 'OR JUST PRESS SPACE'}
+        <span className={best > 0 ? undefined : 'rx-kbd'} style={{ fontFamily: ARCHIVO, fontSize: 12, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)' }}>
+          {best > 0 && `YOUR BEST: ${best} MS`}
+          <span className="rx-kbd">{best > 0 ? ' - OR PRESS SPACE' : 'OR JUST PRESS SPACE'}</span>
         </span>
       </section>
 
@@ -202,12 +212,26 @@ export default function NotFound404() {
             position: 'absolute', inset: 0, zIndex: -1, background: G, opacity: isGo ? 1 : 0,
             willChange: 'opacity', pointerEvents: 'none',
           }} />
-          <span style={{
-            position: 'absolute', top: 20, right: 24, fontFamily: ARCHIVO, fontSize: 11,
-            letterSpacing: '0.14em', color: isGo ? 'rgba(0,7,24,0.55)' : 'rgba(255,255,255,0.4)',
-          }}>
-            ESC TO CLOSE
-          </span>
+          {/* A real close control for touch (Escape is keyboard-only). Stopping
+              pointerdown keeps the veil from treating the tap as a hit and
+              re-arming the game. The padding gives a 44px+ target while the
+              label sits where the old 'ESC TO CLOSE' hint did. */}
+          <button
+            type="button"
+            aria-label="Close"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); closeVeil() }}
+            style={{
+              position: 'absolute', top: 4, right: 8, minWidth: 44, minHeight: 44,
+              padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: ARCHIVO, fontSize: 11, lineHeight: 1,
+              letterSpacing: '0.14em', color: isGo ? 'rgba(0,7,24,0.55)' : 'rgba(255,255,255,0.4)',
+            }}
+          >
+            <span className="rx-kbd">ESC TO CLOSE</span>
+            <span className="rx-touch" style={{ fontSize: 13, fontWeight: 700, color: isGo ? 'rgba(0,7,24,0.7)' : 'rgba(255,255,255,0.75)' }}>CLOSE &#x2715;</span>
+          </button>
           {best > 0 && !isGo && (
             <span style={{
               position: 'absolute', top: 20, left: 24, fontFamily: SAIRA, fontSize: 13,
@@ -230,7 +254,8 @@ export default function NotFound404() {
                 ))}
               </h2>
               <p style={{ fontFamily: ARCHIVO, fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.85)', margin: 0 }}>
-                Hit anywhere, or space, the moment it flips.
+                <span className="rx-kbd">Hit anywhere, or space, the moment it flips.</span>
+                <span className="rx-touch">Tap anywhere the moment it flips.</span>
               </p>
             </>
           )}
@@ -271,7 +296,8 @@ export default function NotFound404() {
                 fontFamily: SAIRA, fontSize: 16, fontWeight: 700, letterSpacing: '0.1em',
                 color: 'rgba(255,255,255,0.85)', animation: 'reaction-pulse 1.7s ease-in-out infinite',
               }}>
-                SPACE / TAP TO RETRY
+                <span className="rx-kbd">SPACE / TAP TO RETRY</span>
+                <span className="rx-touch">TAP TO RETRY</span>
               </span>
             </>
           )}
@@ -344,7 +370,7 @@ export default function NotFound404() {
                   Go again
                 </button>
               </div>
-              <span style={{ fontFamily: ARCHIVO, fontSize: 11, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)' }}>
+              <span className="rx-kbd" style={{ fontFamily: ARCHIVO, fontSize: 11, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)' }}>
                 SPACE RERUNS · ESC CLOSES
               </span>
             </>

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { motion, useTransform, useMotionValue, useSpring, animate, useInView } from 'framer-motion'
 import useVisualScrollProgress from './useVisualScrollProgress'
-import CHNCDock from './ui/dock'
+import CHNCDock, { DOCK_MODULES } from './ui/dock'
 import useResponsive from './useResponsive'
 import { withPose } from './lib/teamRoster'
 import TeamMemberCard from './TeamMemberCard'
@@ -190,14 +190,19 @@ function About() {
           </p>
         </div>
         <div style={{ width: isSmall ? '100%' : 562, maxWidth: 562, height: isSmall ? 'clamp(320px, 80vw, 564px)' : 564, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'relative', height: '100%', aspectRatio: '1080 / 1350' }}>
+          {/* One in-view trigger for the whole V: each cutout used to watch its
+              own box, so they popped one by one as each crossed the line. */}
+          <motion.div
+            initial="hidden" whileInView="shown" viewport={{ once: true, amount: 0.25 }}
+            style={{ position: 'relative', height: '100%', aspectRatio: '1080 / 1350' }}
+          >
             {logoArtPeople.map((p, i) => (
               <motion.div
                 key={p.name}
-                initial={{ opacity: 0, y: 26, scale: 0.7 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.35 }}
-                transition={{ delay: 0.15 + i * 0.09, type: 'spring', duration: 0.6, bounce: 0.35 }}
+                variants={{
+                  hidden: { opacity: 0, y: 26, scale: 0.7 },
+                  shown: { opacity: 1, y: 0, scale: 1, transition: { delay: 0.15 + i * 0.09, type: 'spring', duration: 0.6, bounce: 0.35 } },
+                }}
                 style={{ position: 'absolute', left: `${p.left}%`, top: `${p.top}%`, width: `${p.width}%` }}
               >
                 <img
@@ -206,7 +211,7 @@ function About() {
                 />
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -430,28 +435,46 @@ function CHNC() {
       {/* Feature grid (services) — cards flow into the funnel on scroll */}
       <div style={{ maxWidth: 1480, margin: 'clamp(36px, 4vw, 60px) auto 60px', padding: '0 clamp(16px, 3vw, 48px)', width: '100%', boxSizing: 'border-box' }}>
         {isMobile ? (
-          /* Accordion: 12 full-height cards made the section a ~2400px scroll
-             on phones — slim rows with tap-to-expand descriptions instead. */
-          <div style={{ background: DARK, border: `2px solid ${BORDER}` }}>
-            {platformFeatures.map((f, i) => {
-              const open = openFeature === i
+          /* Phones: 2-up tile grid (icon + name) instead of 12 stacked
+             accordion rows. Tapping a tile opens its description in a
+             full-width panel directly under that row, with a caret pointing
+             back at the tile. */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Array.from({ length: Math.ceil(platformFeatures.length / 2) }, (_, r) => {
+              const row = platformFeatures.slice(r * 2, r * 2 + 2)
+              const openInRow = Math.floor(openFeature / 2) === r ? openFeature % 2 : -1
+              const active = openInRow >= 0 ? row[openInRow] : null
               return (
-              <div key={f.title} style={{ borderTop: i === 0 ? 'none' : `1px solid ${BORDER}` }}>
-                <button
-                  onClick={() => setOpenFeature(open ? -1 : i)}
-                  aria-expanded={open}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-                >
-                  <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: 'rgba(52,204,50,0.08)', border: '1px solid rgba(52,204,50,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{f.icon}</svg>
-                  </span>
-                  <p style={{ flex: 1, fontFamily: "'Saira Condensed', sans-serif", fontWeight: 600, fontSize: 18, lineHeight: 1.15, color: '#fff', textTransform: 'uppercase', margin: 0 }}>{f.title}</p>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={open ? G : DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease, stroke 0.3s ease' }}><path d="m6 9 6 6 6-6" /></svg>
-                </button>
+              <div key={r}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {row.map((f, j) => {
+                    const i = r * 2 + j
+                    const open = openFeature === i
+                    return (
+                    <button
+                      key={f.title}
+                      onClick={() => setOpenFeature(open ? -1 : i)}
+                      aria-expanded={open}
+                      aria-controls={`chnc-feature-${r}`}
+                      style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, minHeight: 112, padding: '14px 14px 14px', background: open ? 'rgba(52,204,50,0.07)' : DARK, border: `1px solid ${open ? 'rgba(52,204,50,0.55)' : BORDER}`, cursor: 'pointer', textAlign: 'left', transition: 'background 0.25s ease, border-color 0.25s ease' }}
+                    >
+                      <span style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(52,204,50,0.08)', border: '1px solid rgba(52,204,50,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{f.icon}</svg>
+                        </span>
+                      </span>
+                      <span style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 600, fontSize: 16, lineHeight: 1.1, color: '#fff', textTransform: 'uppercase' }}>{f.title}</span>
+                    </button>
+                    )
+                  })}
+                </div>
                 {/* 0fr→1fr grid keeps the open/close animation in CSS with no height measuring */}
-                <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.35s ease' }}>
+                <div id={`chnc-feature-${r}`} style={{ display: 'grid', gridTemplateRows: active ? '1fr' : '0fr', transition: 'grid-template-rows 0.35s ease' }}>
                   <div style={{ overflow: 'hidden' }}>
-                    <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 14, color: MUTED, lineHeight: '21px', margin: 0, padding: '2px 16px 16px 68px' }}>{f.desc}</p>
+                    <div style={{ position: 'relative', marginTop: 10, padding: '14px 16px', background: '#03111a' }}>
+                      <span aria-hidden style={{ position: 'absolute', top: -6, left: openInRow === 1 ? '75%' : '25%', width: 10, height: 10, background: '#03111a', transform: 'translateX(-50%) rotate(45deg)', transition: 'left 0.3s ease' }} />
+                      <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 14, color: MUTED, lineHeight: '21px', margin: 0 }}>{active?.desc}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -493,11 +516,11 @@ function CHNC() {
             the key disappears from style, leaving the lockup stuck faded on
             phones. Explicit values override the stale binding. */}
         <motion.div style={{ position: 'relative', zIndex: 1, textAlign: 'center', opacity: isSmall ? 1 : chncOpacity, scale: isSmall ? 1 : chncScale }}>
-          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(52px, 7.5vw, 113px)', fontWeight: 800, color: G, letterSpacing: '-3.27px', lineHeight: 1 }}>CHNC</div>
+          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(52px, 7.5vw, 113px)', fontWeight: 800, color: G, letterSpacing: '-3.27px', lineHeight: 0.82 }}>CHNC</div>
           {/* Gap/size/tracking scale with the wordmark (7.5vw) so the lockup
               keeps the desktop proportions on small screens instead of the
               tagline drifting away from CHNC. */}
-          <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(10px, 1.15vw, 14px)', color: DIM, letterSpacing: 'clamp(2px, 0.33vw, 4px)', textTransform: 'uppercase', marginTop: 'clamp(6px, 1.3vw, 16px)' }}>
+          <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(10px, 1.15vw, 14px)', color: DIM, letterSpacing: 'clamp(2px, 0.33vw, 4px)', textTransform: 'uppercase', marginTop: 'clamp(4px, 0.6vw, 8px)' }}>
             The Opportunity Creators
           </p>
         </motion.div>
@@ -517,7 +540,7 @@ function CHNC() {
           <div style={{
             ...(isSmall
               ? { position: 'relative', paddingTop: 20, paddingBottom: 110 }
-              : { position: 'sticky', top: 84, height: `min(calc(100vh / var(--pz, 1) - 220px), ${dashH + 20}px)`, paddingTop: '20px' }),
+              : { position: 'relative', height: `min(calc(100vh / var(--pz, 1) - 220px), ${dashH + 20}px)`, paddingTop: '20px' }),
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'flex-start',
             overflow: 'visible',
@@ -625,7 +648,16 @@ function CHNC() {
                   )
                 })()}
                 <motion.div
+                  // Phones: swipe the dashboard sideways to step through modules
+                  // (pan-y keeps normal vertical page scrolling).
+                  onPanEnd={isSmall ? (_, info) => {
+                    if (Math.abs(info.offset.x) < 50 || Math.abs(info.offset.x) < Math.abs(info.offset.y)) return
+                    const i = DOCK_MODULES.indexOf(activeModule)
+                    const dir = info.offset.x < 0 ? 1 : -1
+                    setActiveModule(DOCK_MODULES[(i + dir + DOCK_MODULES.length) % DOCK_MODULES.length])
+                  } : undefined}
                   style={{
+                    ...(isSmall ? { touchAction: 'pan-y' } : {}),
                     width: '100%', aspectRatio: '1440/930',
                     boxShadow: '0 40px 120px rgba(0,0,0,0.7), 0 0 80px rgba(52,204,50,0.12)',
                     transformOrigin: 'center center', borderRadius: 8, overflow: 'hidden',
@@ -637,10 +669,10 @@ function CHNC() {
                     WebkitBackfaceVisibility: 'hidden',
                   }}
                 >
-                  {/* InsightIT renders as a bare feature shot (no platform
-                      chrome); other modules keep the full dashboard mock. */}
-                  <CHNCDashboard tilesTrigger={tilesReady} activeModule={activeModule} onModuleChange={setActiveModule}
-                    bare={activeModule === 'InsightIT'} />
+                  {/* Every module, InsightIT included, uses the standard
+                      dashboard mock. The InsightIT feature shot is kept in
+                      CHNCDashboard: pass bare={activeModule === 'InsightIT'}. */}
+                  <CHNCDashboard tilesTrigger={tilesReady} activeModule={activeModule} onModuleChange={setActiveModule} />
                 </motion.div>
               </div>
               <motion.div
@@ -703,11 +735,11 @@ function SlotDigit({ char, inView, delay }) {
   )
 }
 
-function RollingNumber({ value, style }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.6 })
+// `inView` comes from the Impact grid so every number rolls at the same moment
+// (per-number triggers fired one by one as the stacked mobile cards scrolled in).
+function RollingNumber({ value, style, inView }) {
   return (
-    <p ref={ref} style={{ ...style, lineHeight: SLOT_CELL }} aria-label={value}>
+    <p style={{ ...style, lineHeight: SLOT_CELL }} aria-label={value}>
       <span aria-hidden="true">
         {value.split('').map((ch, i) => (
           <SlotDigit key={i} char={ch} inView={inView} delay={i * 0.12} />
@@ -719,6 +751,8 @@ function RollingNumber({ value, style }) {
 
 function Impact() {
   const { isMobile } = useResponsive()
+  const gridRef = useRef(null)
+  const inView = useInView(gridRef, { once: true, amount: 0.15 })
   return (
     <section style={{ background: DARK, padding: 'clamp(56px, 8vw, 100px) clamp(20px, 6vw, 100px) 0' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'clamp(40px, 6vw, 80px)', alignItems: 'center' }}>
@@ -728,10 +762,10 @@ function Impact() {
             Impact we have <span style={{ color: G }}>built</span>
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, width: '100%' }}>
+        <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, width: '100%' }}>
           {impacts.map((s) => (
             <div key={s.num} style={{ border: `2px solid ${BORDER}`, padding: 'clamp(20px, 4vw, 30px)' }}>
-              <RollingNumber value={s.num} style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 'clamp(40px, 5.3vw, 80px)', fontWeight: 800, color: G, lineHeight: 1.1 }} />
+              <RollingNumber value={s.num} inView={inView} style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 'clamp(40px, 5.3vw, 80px)', fontWeight: 800, color: G, lineHeight: 1.1 }} />
               <p style={{ fontFamily: "'Archivo', sans-serif", fontSize: 18, color: MUTED, lineHeight: '24px', marginTop: 10 }}>{s.desc}</p>
               {s.tag && <p style={{ fontFamily: "'Saira Condensed', sans-serif", fontSize: 16, fontWeight: 600, color: G, textTransform: 'uppercase', marginTop: 10 }}>{s.tag}</p>}
             </div>
@@ -1062,7 +1096,7 @@ function Team() {
 // ─── Advisory Board ───────────────────────────────────────────────────────────
 const boardMembers = [
   // TODO: real titles + bios pending from the client (bios below are placeholder)
-  { name: 'balaji jaganathan', title: 'CEO', bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', img: boardImg },
+  { name: 'Balaji Jagannathan', lowercaseName: true, title: 'CEO', bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', img: boardImg },
   { name: 'Prakash Satyapalan', title: 'Advisory Board Member', bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', img: '/figma/home/board-prakash.webp' },
   { name: 'Vikram Nair', title: 'Advisory Board Member', bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', img: '/figma/home/board-vikram.webp' },
 ]
@@ -1077,12 +1111,15 @@ function BoardCard({ member, active, onToggle }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onTouchStart={() => (onToggle ? onToggle() : setHovered(h => !h))}
+      // Phones: a real tap (onClick) so starting a swipe along the scroll row
+      // doesn't pop a card open; tablets keep the touch toggle.
+      onClick={onToggle}
+      onTouchStart={onToggle ? undefined : () => setHovered(h => !h)}
       style={{
-        // Cells keep the desktop 400×561 proportion. Three cards sharing a
-        // phone row shrink to ~110px, so on mobile they wrap 2+1 instead —
-        // larger cards with no scrolling.
-        flex: isMobile ? '0 0 calc((100% - 8px) / 2)' : 1,
+        // Cells keep the desktop 400×561 proportion. Phones get a swipeable
+        // row: each card ~75% of the viewport with the next one peeking in.
+        flex: isMobile ? '0 0 75%' : 1,
+        scrollSnapAlign: isMobile ? 'center' : undefined,
         position: 'relative', overflow: 'hidden',
         cursor: 'pointer', aspectRatio: '400 / 561',
         // White backing: Bala's portrait is a transparent cutout, so without
@@ -1134,11 +1171,10 @@ function BoardCard({ member, active, onToggle }) {
         opacity: shown ? 1 : 0,
         transition: 'transform 0.45s ease, opacity 0.4s ease',
       }}>
-        {/* Mobile cells are narrow, so the bio drops to 10px and scrolls if a
-            long bio still overflows the card. */}
+        {/* Bio scrolls if a long one still overflows the card. */}
         <p style={{
-          fontFamily: "'Archivo', sans-serif", fontSize: isMobile ? 10 : isSmall ? 11 : 18, color: MUTED,
-          lineHeight: isMobile ? 1.4 : isSmall ? 1.45 : '28px', marginBottom: isMobile ? 8 : isSmall ? 12 : 32,
+          fontFamily: "'Archivo', sans-serif", fontSize: isMobile ? 13 : isSmall ? 11 : 18, color: MUTED,
+          lineHeight: isMobile ? 1.5 : isSmall ? 1.45 : '28px', marginBottom: isMobile ? 8 : isSmall ? 12 : 32,
           flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: isSmall ? 8 : 32,
         }}>{member.bio}</p>
         <div>
@@ -1153,15 +1189,17 @@ function BoardCard({ member, active, onToggle }) {
         </div>
       </div>
 
-      {/* Name always visible at bottom (subtle, disappears on hover) */}
+      {/* Name always visible at bottom (subtle, disappears on hover). Styled
+          to match the Team strip cards (TeamMemberCard variant="strip"). */}
       <div style={{
-        position: 'absolute', bottom: isSmall ? 10 : 24, left: isSmall ? 10 : 28,
+        position: 'absolute', bottom: isMobile ? 16 : 24, left: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
         opacity: shown ? 0 : 1,
         transition: 'opacity 0.3s ease',
       }}>
         <p style={{
-          fontFamily: "'Saira Condensed', sans-serif", fontWeight: 600,
-          fontSize: isSmall ? 'clamp(11px, 2.8vw, 14px)' : 22, color: '#fff',
+          fontFamily: "'Saira Condensed', sans-serif", fontWeight: 700,
+          fontSize: isMobile ? 20 : isSmall ? 22 : 28, lineHeight: 1.1, letterSpacing: '0.02em',
+          textTransform: member.lowercaseName ? 'lowercase' : 'uppercase', color: '#fff',
         }}>{member.name}</p>
       </div>
     </div>
@@ -1169,8 +1207,8 @@ function BoardCard({ member, active, onToggle }) {
 }
 
 function AdvisoryBoard() {
-  // The cards keep their 400×561 proportion (aspect-ratio in BoardCard) and
-  // never scroll: one row on tablet/desktop, a 2+1 wrap on phones. Hover
+  // The cards keep their 400×561 proportion (aspect-ratio in BoardCard): one
+  // row on tablet/desktop, a horizontal scroll-snap row on phones. Hover
   // reveals the bio in-card on desktop/tablet; on mobile a tap does the same
   // (the parent owns the open state so only one card is open at a time).
   const { isMobile, isSmall } = useResponsive()
@@ -1188,7 +1226,16 @@ function AdvisoryBoard() {
           </p>
         </div>
         <div style={{ width: '100%' }}>
-          <div style={{ display: 'flex', flexWrap: isMobile ? 'wrap' : 'nowrap', justifyContent: 'center', gap: isSmall ? 8 : 20 }}>
+          <div style={{
+            display: 'flex', justifyContent: isMobile ? 'flex-start' : 'center', gap: isSmall ? 12 : 20,
+            // Phones: bleed the row to the screen edges (cancelling the
+            // section's side padding) so cards slide in from off-screen.
+            ...(isMobile ? {
+              overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+              margin: '0 calc(-1 * clamp(20px, 6vw, 100px))', padding: '0 clamp(20px, 6vw, 100px)',
+              scrollPaddingInline: 'clamp(20px, 6vw, 100px)',
+            } : {}),
+          }}>
             {boardMembers.map((m, i) => (
               <BoardCard
                 key={i} member={m}

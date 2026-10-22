@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import useResponsive from './useResponsive'
 import useIsomorphicLayoutEffect from './useIsomorphicLayoutEffect'
-import useWarmImages from './useWarmImages'
 import { TEAM } from './lib/teamRoster'
 import { TEAM_GROUPS } from './lib/careersTeams'
 import JoinSection from './JoinSection'
@@ -22,11 +21,11 @@ const imgTeam        = '/figma/careers-01/221.webp'
 // ─── Hero Section ────────────────────────────────────────────────────────────
 // Blog-page hero shape — headline block on top, then the whole roster tiled
 // edge to edge underneath it, so "doesn't take anyone" lands against the actual
-// faces that made it. Tiles sit desaturated; hovering one brings it forward in
-// full colour with that person's own pose shot.
+// faces that made it. Tiles sit desaturated and static (hover reveal removed
+// 1 Oct 2026; pass interactive back on the hero wall to restore it).
 
 // `interactive` off makes the tile a plain still — no pose swap, no lift, no
-// name plate. The team cards use it; only the hero wall reacts to a cursor.
+// name plate. Both the hero wall and the team cards currently use it.
 function FaceTile({ member, gridColumnStart, showName = false, interactive = true }) {
   const { name, role, photo, pose } = member
   const [hovered, setHovered] = useState(false)
@@ -159,7 +158,7 @@ function Hero() {
       flex: 1, minHeight: 0,
     }}>
       {/* ── The wall ─────────────────────────────────────────────────────────── */}
-      <div ref={wallRef} style={{
+      <div ref={wallRef} className="careers-wall" style={{
         // starts right below the fixed nav, not under it — the top row's heads
         // would otherwise sit behind the header bar
         position: 'absolute', top: isSmall ? NAV_H.small : NAV_H.desktop, left: 0, right: 0, bottom: 0,
@@ -170,7 +169,7 @@ function Hero() {
       }}>
         {TEAM.slice(0, shown).map((m, i) => (
           <FaceTile
-            key={m.name} member={m}
+            key={m.name} member={m} interactive={false}
             // centre the final short row
             gridColumnStart={remainder && i === lastRowStart
               ? 1 + Math.floor((cols - remainder) / 2)
@@ -187,7 +186,7 @@ function Hero() {
       }} />
 
       {/* ── Headline ─────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="careers-headline" style={{
         // above the lifted tile (z-index 3) — a face pops out of the wall
         // behind the type, never over it
         position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none',
@@ -207,8 +206,8 @@ function Hero() {
           fontFamily: "'Archivo', sans-serif", fontSize: 'clamp(15px, 2vw, 18px)', color: '#fff',
           lineHeight: 1.5, maxWidth: 700, margin: 0, textShadow: '0 2px 20px rgba(0,7,24,0.95)',
         }}>
-          Your next opportunity starts here. {TEAM.length} people already made it onto the team;
-          hover any face to meet them, then decide whether yours belongs up there too.
+          Your next opportunity starts here. {TEAM.length} people already made it onto the team.
+          Decide whether yours belongs up there too.
         </p>
       </div>
     </section>
@@ -389,24 +388,43 @@ function MeetTheTeams({ onOpenJob }) {
         <span style={{ color: G }}>A PART OF</span>
       </h2>
 
-      {/* Switcher */}
-      <div style={{
-        display: 'flex', gap: 'clamp(8px, 1.5vw, 20px)', flexWrap: 'wrap',
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        {['All openings', ...TEAM_GROUPS.map(g => g.name)].map((label, i) => (
-          <button
-            key={label} className="pill-hover" onClick={() => setActive(i)}
-            style={{
-              background: CARD, border: i === active ? `1px solid ${G}` : '1px solid transparent',
-              height: 46, padding: '0 20px',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              boxSizing: 'border-box', fontFamily: "'Saira Condensed', sans-serif",
-              fontSize: 16, fontWeight: i === active ? 700 : 500,
-              color: i === active ? G : DIM, textTransform: 'uppercase', cursor: 'pointer',
-            }}
-          >{label}</button>
-        ))}
+      {/* Switcher — wraps on desktop; on mobile one swipeable row that bleeds to
+          the screen edges, with a fade on the right hinting at more teams */}
+      <div className="careers-tabs-wrap" style={isMobile ? {
+        position: 'relative', alignSelf: 'stretch', margin: '0 -20px',
+      } : undefined}>
+        <div className={isMobile ? 'no-scrollbar careers-tabs' : 'careers-tabs'} style={isMobile ? {
+          display: 'flex', gap: 8, overflowX: 'auto', scrollSnapType: 'x proximity',
+          padding: '0 20px', scrollPaddingInline: 20,
+        } : {
+          display: 'flex', gap: 'clamp(8px, 1.5vw, 20px)', flexWrap: 'wrap',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          {['All openings', ...TEAM_GROUPS.map(g => g.name)].map((label, i) => (
+            <button
+              key={label} className="pill-hover careers-tab"
+              onClick={(e) => {
+                setActive(i)
+                if (isMobile) e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+              }}
+              style={{
+                background: 'transparent', border: `1px solid ${i === active ? G : BORDER}`,
+                height: isMobile ? 40 : 46, padding: isMobile ? '0 16px' : '0 20px', flexShrink: 0,
+                scrollSnapAlign: 'start', whiteSpace: 'nowrap',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                boxSizing: 'border-box', fontFamily: "'Saira Condensed', sans-serif",
+                fontSize: isMobile ? 15 : 16, fontWeight: i === active ? 700 : 500,
+                color: i === active ? G : DIM, textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >{label}</button>
+          ))}
+        </div>
+        {isMobile && (
+          <div style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: 48, pointerEvents: 'none',
+            background: `linear-gradient(to right, transparent, ${DARK})`,
+          }} />
+        )}
       </div>
 
       {/* Openings — its own outlined panel, centred title over a 3-up grid of
@@ -454,7 +472,7 @@ function MeetTheTeams({ onOpenJob }) {
                   display: 'inline-flex', alignItems: 'center',
                   padding: '5px 10px', border: '1px solid rgba(255,255,255,0.25)',
                   fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600,
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                  letterSpacing: 0, textTransform: 'uppercase',
                   color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap',
                 }}>{job.team}</span>
               </span>
@@ -553,14 +571,12 @@ function MeetTheTeams({ onOpenJob }) {
 
 // ─── Join The Chaos — Contact Form ───────────────────────────────────────────
 // ─── Careers Page ────────────────────────────────────────────────────────────
-// The face wall withholds each pose shot until its tile is first hovered (so
-// the hero doesn't pull double weight up front) — this fills the cache behind
-// the page instead, making that first hover swap instant.
-const POSES = TEAM.map((m) => m.pose).filter(Boolean)
+// Pose shots aren't shown while the face wall is static, so they're no longer
+// warmed here. If hover returns, restore:
+//   const POSES = TEAM.map((m) => m.pose).filter(Boolean)  +  useWarmImages(POSES)
 
 export default function CareersPage() {
   const { isSmall } = useResponsive()
-  useWarmImages(POSES)
   // Every role has its own URL (/careers/copywriter) so an opening can be
   // linked straight from a job post; the detail view is that route's page.
   const router = useRouter()

@@ -35,7 +35,9 @@ export const InputField = ({ label, style, ...p }) => (
     {...p}
     style={{
       flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
-      height: 46, padding: '0 15px', color: '#fff',
+      // minHeight: when the row stacks to a column on mobile, flex: 1's zero
+      // basis would otherwise collapse the field to its text height.
+      height: 46, minHeight: 46, minWidth: 0, padding: '0 15px', color: '#fff',
       fontFamily: "'Archivo', sans-serif", fontSize: 16,
       outline: 'none', boxSizing: 'border-box', ...style,
     }}

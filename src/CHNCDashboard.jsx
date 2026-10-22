@@ -923,7 +923,24 @@ function ListCard({ title, rows }) {
   )
 }
 
-// ─── InsightIT content (home hero feature visual) ─────────────────────────────
+// ─── InsightIT content ────────────────────────────────────────────────────────
+function InsightContent({ controls, tileVariants }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'flex-start', width: 1119 }}>
+      <StatTiles tiles={MODULES.InsightIT.tiles} controls={controls} tileVariants={tileVariants} />
+      <div style={{ display: 'flex', gap: 30, alignItems: 'flex-start', overflow: 'hidden' }}>
+        <CTACard headline="Let's create campaign for your amazing brand!" sub="Track reviews, sentiment & ratings across all locations." cta="Go for it" controls={controls} custom={0} />
+        <CampaignCard controls={controls} custom={1} />
+        <LocationCard controls={controls} custom={2} />
+      </div>
+      <div style={{ display: 'flex', gap: 30, alignItems: 'flex-start', overflow: 'hidden' }}>
+        <ListCard title="Recent Campaign" rows={[0,1,2,3,4,5,6].map(() => ({ isPen: true, label: 'Mahindra XUV700 Awareness', sub: 'Created 30/07/2024' }))} />
+        <ListCard title="Recent Locations" rows={[0,1,2,3,4,5,6].map(() => ({ isPen: false, label: 'Powai Hiranandani', sub: 'Created 30/07/2024' }))} />
+      </div>
+    </div>
+  )
+}
+// ─── InsightIT feature shot (saved, unused: render with bare) ─────────────────
 // A static FEATURE shot framed by the real CHNC chrome: the product Sidebar and
 // Header render around it (see the `bare` branch), and inside the content area
 // sits one big legible InsightIT analytics card plus floating satellite cards
@@ -964,7 +981,7 @@ function FeatCard({ custom, controls, style, pad = 22, float = 0, children }) {
   )
 }
 
-function InsightContent({ controls }) {
+function InsightFeatureContent({ controls }) {
   const [armed, setArmed] = useState(false)
   useEffect(() => {
     const arm = setTimeout(() => setArmed(true), 400)
@@ -5538,7 +5555,7 @@ function ConvergeContent({ controls, tileVariants }) {
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────
-export default function CHNCDashboard({ tilesTrigger, activeModule = 'InsightIT', onModuleChange, stepCount = 0, showWorkflow = false, onFrame, bare = false }) {
+export default function CHNCDashboard({ tilesTrigger, activeModule = 'InsightIT', onModuleChange, stepCount = 0, showWorkflow = false, onFrame, bare = false, staticMode = false }) {
   const containerRef = useRef()
   const [scale, setScale] = useState(1)
   const controls = useAnimation()
@@ -5553,15 +5570,18 @@ export default function CHNCDashboard({ tilesTrigger, activeModule = 'InsightIT'
     return () => observer.disconnect()
   }, [])
 
+  // staticMode (small screens / reduced motion): tiles land in their final
+  // state instead of staggering in.
   useEffect(() => {
-    if (tilesTrigger) controls.start('visible')
-  }, [tilesTrigger, controls])
+    if (tilesTrigger) staticMode ? controls.set('visible') : controls.start('visible')
+  }, [tilesTrigger, controls, staticMode])
 
   useEffect(() => {
     controls.stop()
+    if (staticMode) { controls.set('visible'); return }
     controls.set('hidden')
     setTimeout(() => controls.start('visible'), 50)
-  }, [activeModule])
+  }, [activeModule, staticMode])
 
   const tileVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -5617,7 +5637,7 @@ export default function CHNCDashboard({ tilesTrigger, activeModule = 'InsightIT'
   }
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: 'transparent', borderRadius: 8 }}>
+    <div ref={containerRef} className={staticMode ? 'chnc-static' : undefined} style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: 'transparent', borderRadius: 8 }}>
       <div style={{ width: 1440, height: 930, transform: `scale(${scale})`, transformOrigin: 'top left', position: 'relative', background: '#f9f9fd', overflow: 'hidden' }}>
        <div style={{ width: 1440, height: 930, position: 'relative', transform: `translate(${cam.current.tx}px, ${cam.current.ty}px)`, transformOrigin: '0 0', transition: `transform ${cam.current.panDur}s ${cam.current.panEase}`, willChange: 'transform' }}>
        <div style={{ width: 1440, height: 930, position: 'relative', transform: `scale(${cam.current.s})`, transformOrigin: '0 0', transition: `transform ${cam.current.zoomDur}s ${cam.current.zoomEase}`, willChange: 'transform' }}>
@@ -5629,7 +5649,7 @@ export default function CHNCDashboard({ tilesTrigger, activeModule = 'InsightIT'
           <Sidebar active="InsightIT" org={{ initials: 'HM', name: 'Horizon Motors', sub: 'Automobile Ind' }} />
           <Header />
           <div style={{ position: 'absolute', left: 257, top: 70, width: 1183, height: 860 }}>
-            <InsightContent controls={controls} />
+            <InsightFeatureContent controls={controls} />
           </div>
         </> : <>
         <Sidebar active={activeModule} insightSub={activeModule === 'InsightIT' && showWorkflow} org={
