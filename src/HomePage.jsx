@@ -20,6 +20,7 @@ import ContactForm from './ContactForm'
 import AuditForm, { AuditTakeover } from './AuditForm'
 import CHNCPlaceholder from './CHNCPlaceholder'
 import SectionLabel from './SectionLabel'
+import ChncDraft, { DraftSwitcher, useChncDraft } from './CHNCDrafts'
 
 // The dashboard is a 2,000-line interactive mock with timers and observers —
 // no SEO-relevant text, so it loads client-side only, behind the placeholder.
@@ -252,7 +253,17 @@ const platformFeatures = [
     desc: 'Connects every agency you work with into one dashboard, so performance sits side by side instead of scattered across reports. Full visibility, without chasing five different partners for updates.' },
 ]
 
+// Drafts (experiment branch): ?chnc=a|b|c|d swaps in a CHNCDrafts.jsx direction.
 function CHNC() {
+  const draft = useChncDraft()
+  return (
+    <div id="chnc-section">
+      {draft ? <ChncDraft variant={draft} /> : <CHNCOriginal />}
+    </div>
+  )
+}
+
+function CHNCOriginal() {
   const router = useRouter()
   const scrollRef = useRef()
   const { isSmall, isMobile, isTablet, width } = useResponsive()
@@ -1284,6 +1295,7 @@ export default function HomePage() {
       <AdvisoryBoard />
       <Contact />
       <Footer />
+      <DraftSwitcher />
     </>
   )
 }

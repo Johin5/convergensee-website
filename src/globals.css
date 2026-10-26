@@ -916,3 +916,21 @@ img, video, svg { max-width: 100%; }
   .careers-tabs::-webkit-scrollbar { display: none; }
   .careers-tab { height: 40px !important; padding: 0 16px !important; font-size: 15px !important; }
 }
+
+/* CHNC draft B: the active module tab's progress line fills over one tour step */
+@keyframes chnc-tab-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.chnc-tab-progress { animation-name: chnc-tab-fill; animation-timing-function: linear; animation-fill-mode: forwards; }
+
+/* CHNC draft F: the live dot on the front alert */
+@keyframes chnc-alert-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,204,50,0.6); } 100% { box-shadow: 0 0 0 10px rgba(52,204,50,0); } }
+.chnc-alert-dot { animation: chnc-alert-pulse 1.6s ease-out infinite; }
+/* CHNC draft H: a slow sheen across the green wordmark */
+.chnc-poster-mark {
+  background: linear-gradient(100deg, #34cc32 0%, #34cc32 40%, #b8f5b7 50%, #34cc32 60%, #34cc32 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: chnc-sheen 7s ease-in-out infinite;
+}
+@keyframes chnc-sheen { 0% { background-position: 100% 0; } 60%, 100% { background-position: 0% 0; } }
+@media (prefers-reduced-motion: reduce) { .chnc-poster-mark, .chnc-alert-dot { animation: none; } }
